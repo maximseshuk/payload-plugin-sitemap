@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const hu: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Oldaltérkép',
+    generate: 'Generálás',
+    regenerate: 'Újragenerálás',
+    open: 'Oldaltérkép megnyitása',
+    queued: 'Sorban áll',
+    running: 'Generálás folyamatban',
+    generatedAt: 'Utoljára generálva',
+    never: 'Még nincs generálva. A közzétételhez generálja az oldaltérképet.',
+    failed: 'Az utolsó futás sikertelen: {{error}}',
+    failedTitle: 'Az utolsó futás sikertelen',
+    urls: 'URL-ek',
+    file: 'Fájl',
+    files: 'Fájlok',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL',
+    fileCount_one: 'Fájl',
+    fileCount_other: 'Fájl',
+    locale: 'Nyelv',
+    tenant: 'Bérlő',
+    source: 'Forrás',
+    index: 'Index',
+    size: 'Méret',
+    regenerateQueued: 'Újragenerálás sorba állítva',
+    busy: 'Az oldaltérkép generálása már folyamatban van. Próbálja újra, ha befejeződött.',
+    regenerateError: 'Az oldaltérképet nem sikerült újragenerálni. Próbálja újra.',
+    loadError: 'Az oldaltérkép állapota nem tölthető be. Az újrapróbáláshoz töltse újra az oldalt.',
+    failedShort: 'Sikertelen',
+    exclude: 'Kizárás az oldaltérképből',
+    priority: 'Prioritás',
+    changefreq: 'Változás gyakorisága',
+  },
+}

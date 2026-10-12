@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const th: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'แผนผังเว็บไซต์',
+    generate: 'สร้าง',
+    regenerate: 'สร้างใหม่',
+    open: 'เปิดแผนผังเว็บไซต์',
+    queued: 'อยู่ในคิว',
+    running: 'กำลังสร้าง',
+    generatedAt: 'สร้างล่าสุด',
+    never: 'ยังไม่ได้สร้าง สร้างแผนผังเว็บไซต์เพื่อเผยแพร่',
+    failed: 'การทำงานครั้งล่าสุดล้มเหลว: {{error}}',
+    failedTitle: 'การทำงานครั้งล่าสุดล้มเหลว',
+    urls: 'URL',
+    file: 'ไฟล์',
+    files: 'ไฟล์',
+    urlCount_other: 'URL',
+    fileCount_other: 'ไฟล์',
+    locale: 'ภาษา',
+    tenant: 'ผู้เช่า',
+    source: 'แหล่งที่มา',
+    index: 'ดัชนี',
+    size: 'ขนาด',
+    regenerateQueued: 'เพิ่มการสร้างใหม่ลงในคิวแล้ว',
+    busy: 'กำลังสร้างแผนผังเว็บไซต์อยู่แล้ว ลองอีกครั้งเมื่อเสร็จสิ้น',
+    regenerateError: 'ไม่สามารถสร้างแผนผังเว็บไซต์ใหม่ได้ ลองอีกครั้ง',
+    loadError: 'ไม่สามารถโหลดสถานะแผนผังเว็บไซต์ โหลดหน้านี้ใหม่เพื่อลองอีกครั้ง',
+    failedShort: 'ล้มเหลว',
+    exclude: 'ไม่รวมในแผนผังเว็บไซต์',
+    priority: 'ลำดับความสำคัญ',
+    changefreq: 'ความถี่ในการเปลี่ยนแปลง',
+  },
+}

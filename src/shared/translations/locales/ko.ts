@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const ko: Locale = {
+  [PLUGIN_NAME]: {
+    title: '사이트맵',
+    generate: '생성',
+    regenerate: '다시 생성',
+    open: '사이트맵 열기',
+    queued: '대기 중',
+    running: '생성 중',
+    generatedAt: '마지막 생성',
+    never: '아직 생성되지 않았습니다. 게시하려면 사이트맵을 생성하세요.',
+    failed: '마지막 실행 실패: {{error}}',
+    failedTitle: '마지막 실행 실패',
+    urls: 'URL',
+    file: '파일',
+    files: '파일',
+    urlCount_other: 'URL',
+    fileCount_other: '파일',
+    locale: '로케일',
+    tenant: '세입자',
+    source: '소스',
+    index: '인덱스',
+    size: '크기',
+    regenerateQueued: '다시 생성이 대기열에 추가됨',
+    busy: '사이트맵이 이미 생성 중입니다. 완료된 후 다시 시도하세요.',
+    regenerateError: '사이트맵을 다시 생성할 수 없습니다. 다시 시도하세요.',
+    loadError: '사이트맵 상태를 불러올 수 없습니다. 다시 시도하려면 페이지를 새로 고치세요.',
+    failedShort: '실패',
+    exclude: '사이트맵에서 제외',
+    priority: '우선순위',
+    changefreq: '변경 빈도',
+  },
+}

@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const da: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Sitemap',
+    generate: 'Generér',
+    regenerate: 'Generér igen',
+    open: 'Åbn sitemap',
+    queued: 'I kø',
+    running: 'Genererer',
+    generatedAt: 'Sidst genereret',
+    never: 'Endnu ikke genereret. Generér sitemappet for at udgive det.',
+    failed: 'Seneste kørsel fejlede: {{error}}',
+    failedTitle: 'Seneste kørsel fejlede',
+    urls: "URL'er",
+    file: 'Fil',
+    files: 'Filer',
+    urlCount_one: 'URL',
+    urlCount_other: "URL'er",
+    fileCount_one: 'Fil',
+    fileCount_other: 'Filer',
+    locale: 'Sprog',
+    tenant: 'Lejer',
+    source: 'Kilde',
+    index: 'Indeks',
+    size: 'Størrelse',
+    regenerateQueued: 'Ny generering sat i kø',
+    busy: 'Sitemappet bliver allerede genereret. Prøv igen, når det er færdigt.',
+    regenerateError: 'Sitemappet kunne ikke genereres igen. Prøv igen.',
+    loadError: 'Sitemap-status kunne ikke indlæses. Genindlæs siden for at prøve igen.',
+    failedShort: 'Fejlede',
+    exclude: 'Udelad fra sitemap',
+    priority: 'Prioritet',
+    changefreq: 'Ændringsfrekvens',
+  },
+}

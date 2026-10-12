@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const tr: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Site haritası',
+    generate: 'Oluştur',
+    regenerate: 'Yeniden oluştur',
+    open: 'Site haritasını aç',
+    queued: 'Sırada',
+    running: 'Oluşturuluyor',
+    generatedAt: 'Son oluşturma',
+    never: 'Henüz oluşturulmadı. Yayımlamak için site haritasını oluşturun.',
+    failed: 'Son çalıştırma başarısız oldu: {{error}}',
+    failedTitle: 'Son çalıştırma başarısız oldu',
+    urls: "URL'ler",
+    file: 'Dosya',
+    files: 'Dosyalar',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL',
+    fileCount_one: 'Dosya',
+    fileCount_other: 'Dosya',
+    locale: 'Dil',
+    tenant: 'Kiracı',
+    source: 'Kaynak',
+    index: 'Dizin',
+    size: 'Boyut',
+    regenerateQueued: 'Yeniden oluşturma sıraya alındı',
+    busy: 'Site haritası zaten oluşturuluyor. Bittiğinde tekrar deneyin.',
+    regenerateError: 'Site haritası yeniden oluşturulamadı. Tekrar deneyin.',
+    loadError: 'Site haritası durumu yüklenemedi. Tekrar denemek için sayfayı yenileyin.',
+    failedShort: 'Başarısız',
+    exclude: 'Site haritasından çıkar',
+    priority: 'Öncelik',
+    changefreq: 'Değişiklik sıklığı',
+  },
+}

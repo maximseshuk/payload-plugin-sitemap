@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const id: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Peta situs',
+    generate: 'Buat',
+    regenerate: 'Buat ulang',
+    open: 'Buka peta situs',
+    queued: 'Dalam antrean',
+    running: 'Sedang dibuat',
+    generatedAt: 'Terakhir dibuat',
+    never: 'Belum dibuat. Buat peta situs untuk menerbitkannya.',
+    failed: 'Proses terakhir gagal: {{error}}',
+    failedTitle: 'Proses terakhir gagal',
+    urls: 'URL',
+    file: 'Berkas',
+    files: 'Berkas',
+    urlCount_other: 'URL',
+    fileCount_other: 'Berkas',
+    locale: 'Bahasa',
+    tenant: 'Tenant',
+    source: 'Sumber',
+    index: 'Indeks',
+    size: 'Ukuran',
+    regenerateQueued: 'Pembuatan ulang masuk antrean',
+    busy: 'Peta situs sedang dibuat. Coba lagi setelah selesai.',
+    regenerateError: 'Peta situs tidak dapat dibuat ulang. Coba lagi.',
+    loadError: 'Status peta situs tidak dapat dimuat. Muat ulang halaman untuk mencoba lagi.',
+    failedShort: 'Gagal',
+    exclude: 'Kecualikan dari peta situs',
+    priority: 'Prioritas',
+    changefreq: 'Frekuensi perubahan',
+  },
+}

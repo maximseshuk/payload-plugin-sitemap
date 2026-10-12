@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const nl: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Sitemap',
+    generate: 'Genereren',
+    regenerate: 'Opnieuw genereren',
+    open: 'Sitemap openen',
+    queued: 'In de wachtrij',
+    running: 'Bezig met genereren',
+    generatedAt: 'Laatst gegenereerd',
+    never: 'Nog niet gegenereerd. Genereer de sitemap om hem te publiceren.',
+    failed: 'Laatste run mislukt: {{error}}',
+    failedTitle: 'Laatste run mislukt',
+    urls: "URL's",
+    file: 'Bestand',
+    files: 'Bestanden',
+    urlCount_one: 'URL',
+    urlCount_other: "URL's",
+    fileCount_one: 'Bestand',
+    fileCount_other: 'Bestanden',
+    locale: 'Taal',
+    tenant: 'Huurder',
+    source: 'Bron',
+    index: 'Index',
+    size: 'Grootte',
+    regenerateQueued: 'Opnieuw genereren in de wachtrij gezet',
+    busy: 'De sitemap wordt al gegenereerd. Probeer het opnieuw wanneer dat klaar is.',
+    regenerateError: 'De sitemap kon niet opnieuw worden gegenereerd. Probeer het opnieuw.',
+    loadError: 'Sitemapstatus kon niet worden geladen. Laad de pagina opnieuw om het nog eens te proberen.',
+    failedShort: 'Mislukt',
+    exclude: 'Uitsluiten van sitemap',
+    priority: 'Prioriteit',
+    changefreq: 'Wijzigingsfrequentie',
+  },
+}

@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const is: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Veftré',
+    generate: 'Búa til',
+    regenerate: 'Búa til aftur',
+    open: 'Opna veftré',
+    queued: 'Í biðröð',
+    running: 'Í vinnslu',
+    generatedAt: 'Síðast búið til',
+    never: 'Ekki búið til enn. Búðu til veftréð til að birta það.',
+    failed: 'Síðasta keyrsla mistókst: {{error}}',
+    failedTitle: 'Síðasta keyrsla mistókst',
+    urls: 'Slóðir',
+    file: 'Skrá',
+    files: 'Skrár',
+    urlCount_one: 'Slóð',
+    urlCount_other: 'Slóðir',
+    fileCount_one: 'Skrá',
+    fileCount_other: 'Skrár',
+    locale: 'Tungumál',
+    tenant: 'Svið',
+    source: 'Uppruni',
+    index: 'Yfirlit',
+    size: 'Stærð',
+    regenerateQueued: 'Endurgerð sett í biðröð',
+    busy: 'Veftréð er þegar í vinnslu. Reyndu aftur þegar vinnslunni lýkur.',
+    regenerateError: 'Ekki tókst að búa veftréð til aftur. Reyndu aftur.',
+    loadError: 'Ekki tókst að hlaða stöðu veftrés. Hladdu síðunni aftur inn til að reyna aftur.',
+    failedShort: 'Mistókst',
+    exclude: 'Útiloka frá veftré',
+    priority: 'Forgangur',
+    changefreq: 'Tíðni breytinga',
+  },
+}

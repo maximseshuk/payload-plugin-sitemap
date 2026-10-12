@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const my: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'ဆိုက်မြေပုံ',
+    generate: 'ထုတ်ရန်',
+    regenerate: 'ပြန်ထုတ်ရန်',
+    open: 'ဆိုက်မြေပုံကို ဖွင့်ရန်',
+    queued: 'တန်းစီထားသည်',
+    running: 'ထုတ်နေသည်',
+    generatedAt: 'နောက်ဆုံးထုတ်ချိန်',
+    never: 'မထုတ်ရသေးပါ။ ထုတ်ဝေရန် ဆိုက်မြေပုံကို ထုတ်ပါ။',
+    failed: 'နောက်ဆုံးလုပ်ဆောင်မှု မအောင်မြင်ပါ: {{error}}',
+    failedTitle: 'နောက်ဆုံးလုပ်ဆောင်မှု မအောင်မြင်ပါ',
+    urls: 'URL များ',
+    file: 'ဖိုင်',
+    files: 'ဖိုင်များ',
+    urlCount_other: 'URL',
+    fileCount_other: 'ဖိုင်',
+    locale: 'ဘာသာစကား',
+    tenant: 'အိမ်ငှား',
+    source: 'ရင်းမြစ်',
+    index: 'အညွှန်း',
+    size: 'အရွယ်အစား',
+    regenerateQueued: 'ပြန်ထုတ်ရန် တန်းစီထားသည်',
+    busy: 'ဆိုက်မြေပုံကို ထုတ်နေဆဲ ဖြစ်သည်။ ပြီးဆုံးမှ ထပ်မံကြိုးစားပါ။',
+    regenerateError: 'ဆိုက်မြေပုံကို ပြန်မထုတ်နိုင်ပါ။ ထပ်မံကြိုးစားပါ။',
+    loadError: 'ဆိုက်မြေပုံ အခြေအနေကို မဖွင့်နိုင်ပါ။ ထပ်မံကြိုးစားရန် စာမျက်နှာကို ပြန်ဖွင့်ပါ။',
+    failedShort: 'မအောင်မြင်ပါ',
+    exclude: 'ဆိုက်မြေပုံမှ ဖယ်ထုတ်ရန်',
+    priority: 'ဦးစားပေးမှု',
+    changefreq: 'ပြောင်းလဲမှုအကြိမ်ရေ',
+  },
+}

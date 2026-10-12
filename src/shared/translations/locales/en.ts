@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const en: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Sitemap',
+    generate: 'Generate',
+    regenerate: 'Regenerate',
+    open: 'Open sitemap',
+    queued: 'Queued',
+    running: 'Generating',
+    generatedAt: 'Last generated',
+    never: 'Not generated yet. Generate the sitemap to publish it.',
+    failed: 'Last run failed: {{error}}',
+    failedTitle: 'Last run failed',
+    urls: 'URLs',
+    file: 'File',
+    files: 'Files',
+    urlCount_one: 'URL',
+    urlCount_other: 'URLs',
+    fileCount_one: 'File',
+    fileCount_other: 'Files',
+    locale: 'Locale',
+    tenant: 'Tenant',
+    source: 'Source',
+    index: 'Index',
+    size: 'Size',
+    regenerateQueued: 'Regeneration queued',
+    busy: 'A sitemap run is already in progress. Try again when it finishes.',
+    regenerateError: 'Could not regenerate the sitemap. Try again.',
+    loadError: 'Could not load sitemap status. Reload the page to try again.',
+    failedShort: 'Failed',
+    exclude: 'Exclude from sitemap',
+    priority: 'Priority',
+    changefreq: 'Change frequency',
+  },
+}

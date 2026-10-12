@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const zhTw: Locale = {
+  [PLUGIN_NAME]: {
+    title: '網站地圖',
+    generate: '產生',
+    regenerate: '重新產生',
+    open: '開啟網站地圖',
+    queued: '排隊中',
+    running: '產生中',
+    generatedAt: '上次產生',
+    never: '尚未產生。產生網站地圖後即可發布。',
+    failed: '上次執行失敗：{{error}}',
+    failedTitle: '上次執行失敗',
+    urls: 'URL',
+    file: '檔案',
+    files: '檔案',
+    urlCount_other: 'URL',
+    fileCount_other: '檔案',
+    locale: '語言',
+    tenant: '租戶',
+    source: '來源',
+    index: '索引',
+    size: '大小',
+    regenerateQueued: '已加入重新產生佇列',
+    busy: '網站地圖正在產生中。請在完成後再試一次。',
+    regenerateError: '無法重新產生網站地圖。請再試一次。',
+    loadError: '無法載入網站地圖狀態。請重新整理頁面後再試一次。',
+    failedShort: '失敗',
+    exclude: '從網站地圖中排除',
+    priority: '優先順序',
+    changefreq: '變更頻率',
+  },
+}

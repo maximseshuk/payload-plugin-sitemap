@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const bg: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Карта на сайта',
+    generate: 'Генерирай',
+    regenerate: 'Генерирай отново',
+    open: 'Отвори картата на сайта',
+    queued: 'В опашката',
+    running: 'Генерира се',
+    generatedAt: 'Последно генериране',
+    never: 'Още не е генерирана. Генерирайте картата на сайта, за да я публикувате.',
+    failed: 'Последното изпълнение е неуспешно: {{error}}',
+    failedTitle: 'Последното изпълнение е неуспешно',
+    urls: 'URL адреси',
+    file: 'Файл',
+    files: 'Файлове',
+    urlCount_one: 'URL адрес',
+    urlCount_other: 'URL адреса',
+    fileCount_one: 'Файл',
+    fileCount_other: 'Файла',
+    locale: 'Език',
+    tenant: 'Наемател',
+    source: 'Източник',
+    index: 'Индекс',
+    size: 'Размер',
+    regenerateQueued: 'Повторното генериране е в опашката',
+    busy: 'Картата на сайта вече се генерира. Опитайте отново, когато генерирането приключи.',
+    regenerateError: 'Картата на сайта не можа да се генерира отново. Опитайте отново.',
+    loadError: 'Състоянието на картата на сайта не можа да се зареди. Презаредете страницата, за да опитате отново.',
+    failedShort: 'Неуспешно',
+    exclude: 'Изключи от картата на сайта',
+    priority: 'Приоритет',
+    changefreq: 'Честота на промяна',
+  },
+}

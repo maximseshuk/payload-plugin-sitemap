@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const ja: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'サイトマップ',
+    generate: '生成',
+    regenerate: '再生成',
+    open: 'サイトマップを開く',
+    queued: '待機中',
+    running: '生成中',
+    generatedAt: '最終生成',
+    never: 'まだ生成されていません。公開するにはサイトマップを生成してください。',
+    failed: '前回の実行に失敗しました: {{error}}',
+    failedTitle: '前回の実行に失敗しました',
+    urls: 'URL',
+    file: 'ファイル',
+    files: 'ファイル',
+    urlCount_other: 'URL',
+    fileCount_other: 'ファイル',
+    locale: 'ロケール',
+    tenant: 'テナント',
+    source: 'ソース',
+    index: 'インデックス',
+    size: 'サイズ',
+    regenerateQueued: '再生成をキューに追加しました',
+    busy: 'サイトマップはすでに生成中です。完了してからもう一度お試しください。',
+    regenerateError: 'サイトマップを再生成できませんでした。もう一度お試しください。',
+    loadError: 'サイトマップの状態を読み込めませんでした。もう一度試すにはページを再読み込みしてください。',
+    failedShort: '失敗',
+    exclude: 'サイトマップから除外',
+    priority: '優先度',
+    changefreq: '更新頻度',
+  },
+}

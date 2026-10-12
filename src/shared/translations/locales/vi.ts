@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const vi: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Sơ đồ trang web',
+    generate: 'Tạo',
+    regenerate: 'Tạo lại',
+    open: 'Mở sơ đồ trang web',
+    queued: 'Đang chờ',
+    running: 'Đang tạo',
+    generatedAt: 'Tạo lần cuối',
+    never: 'Chưa được tạo. Hãy tạo sơ đồ trang web để xuất bản.',
+    failed: 'Lần chạy cuối thất bại: {{error}}',
+    failedTitle: 'Lần chạy cuối thất bại',
+    urls: 'URL',
+    file: 'Tệp',
+    files: 'Tệp',
+    urlCount_other: 'URL',
+    fileCount_other: 'Tệp',
+    locale: 'Ngôn ngữ',
+    tenant: 'Người thuê',
+    source: 'Nguồn',
+    index: 'Chỉ mục',
+    size: 'Kích thước',
+    regenerateQueued: 'Đã xếp hàng tạo lại',
+    busy: 'Sơ đồ trang web đang được tạo. Hãy thử lại khi quá trình này hoàn tất.',
+    regenerateError: 'Không thể tạo lại sơ đồ trang web. Hãy thử lại.',
+    loadError: 'Không thể tải trạng thái sơ đồ trang web. Hãy tải lại trang để thử lại.',
+    failedShort: 'Thất bại',
+    exclude: 'Loại khỏi sơ đồ trang web',
+    priority: 'Mức ưu tiên',
+    changefreq: 'Tần suất thay đổi',
+  },
+}

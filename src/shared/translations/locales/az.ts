@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const az: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Sayt xəritəsi',
+    generate: 'Yarat',
+    regenerate: 'Yenidən yarat',
+    open: 'Sayt xəritəsini aç',
+    queued: 'Növbədədir',
+    running: 'Yaradılır',
+    generatedAt: 'Son yaradılma',
+    never: 'Hələ yaradılmayıb. Dərc etmək üçün sayt xəritəsini yaradın.',
+    failed: 'Son icra uğursuz oldu: {{error}}',
+    failedTitle: 'Son icra uğursuz oldu',
+    urls: 'URL-lər',
+    file: 'Fayl',
+    files: 'Fayllar',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL',
+    fileCount_one: 'Fayl',
+    fileCount_other: 'Fayl',
+    locale: 'Dil',
+    tenant: 'Kirayəçi',
+    source: 'Mənbə',
+    index: 'İndeks',
+    size: 'Ölçü',
+    regenerateQueued: 'Yenidən yaratma növbəyə əlavə edildi',
+    busy: 'Sayt xəritəsi artıq yaradılır. Bitdikdən sonra yenidən cəhd edin.',
+    regenerateError: 'Sayt xəritəsini yenidən yaratmaq mümkün olmadı. Yenidən cəhd edin.',
+    loadError: 'Sayt xəritəsinin statusu yüklənmədi. Yenidən cəhd etmək üçün səhifəni yeniləyin.',
+    failedShort: 'Uğursuz',
+    exclude: 'Sayt xəritəsindən çıxar',
+    priority: 'Prioritet',
+    changefreq: 'Dəyişmə tezliyi',
+  },
+}

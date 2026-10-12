@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const bnBd: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'সাইটম্যাপ',
+    generate: 'তৈরি করুন',
+    regenerate: 'আবার তৈরি করুন',
+    open: 'সাইটম্যাপ খুলুন',
+    queued: 'সারিতে আছে',
+    running: 'তৈরি হচ্ছে',
+    generatedAt: 'সর্বশেষ তৈরি',
+    never: 'এখনও তৈরি হয়নি। প্রকাশ করতে সাইটম্যাপ তৈরি করুন।',
+    failed: 'সর্বশেষ চালানো ব্যর্থ: {{error}}',
+    failedTitle: 'সর্বশেষ চালানো ব্যর্থ',
+    urls: 'URL',
+    file: 'ফাইল',
+    files: 'ফাইলসমূহ',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL',
+    fileCount_one: 'ফাইল',
+    fileCount_other: 'ফাইল',
+    locale: 'ভাষা',
+    tenant: 'টেনেন্ট',
+    source: 'উৎস',
+    index: 'ইনডেক্স',
+    size: 'আকার',
+    regenerateQueued: 'আবার তৈরি সারিতে যোগ হয়েছে',
+    busy: 'সাইটম্যাপ ইতিমধ্যে তৈরি হচ্ছে। এটি শেষ হলে আবার চেষ্টা করুন।',
+    regenerateError: 'সাইটম্যাপ আবার তৈরি করা যায়নি। আবার চেষ্টা করুন।',
+    loadError: 'সাইটম্যাপের অবস্থা লোড করা যায়নি। আবার চেষ্টা করতে পৃষ্ঠাটি রিলোড করুন।',
+    failedShort: 'ব্যর্থ',
+    exclude: 'সাইটম্যাপ থেকে বাদ দিন',
+    priority: 'অগ্রাধিকার',
+    changefreq: 'পরিবর্তনের হার',
+  },
+}

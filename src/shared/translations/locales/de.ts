@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const de: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Sitemap',
+    generate: 'Erzeugen',
+    regenerate: 'Neu erzeugen',
+    open: 'Sitemap öffnen',
+    queued: 'In der Warteschlange',
+    running: 'Wird erzeugt',
+    generatedAt: 'Zuletzt erzeugt',
+    never: 'Noch nicht erzeugt. Erzeugen Sie die Sitemap, um sie zu veröffentlichen.',
+    failed: 'Letzter Lauf fehlgeschlagen: {{error}}',
+    failedTitle: 'Letzter Lauf fehlgeschlagen',
+    urls: 'URLs',
+    file: 'Datei',
+    files: 'Dateien',
+    urlCount_one: 'URL',
+    urlCount_other: 'URLs',
+    fileCount_one: 'Datei',
+    fileCount_other: 'Dateien',
+    locale: 'Sprache',
+    tenant: 'Mandant',
+    source: 'Quelle',
+    index: 'Index',
+    size: 'Größe',
+    regenerateQueued: 'Neuerzeugung eingereiht',
+    busy: 'Die Sitemap wird bereits erzeugt. Versuchen Sie es erneut, wenn der Lauf fertig ist.',
+    regenerateError: 'Die Sitemap konnte nicht neu erzeugt werden. Versuchen Sie es erneut.',
+    loadError: 'Sitemap-Status konnte nicht geladen werden. Laden Sie die Seite neu, um es erneut zu versuchen.',
+    failedShort: 'Fehlgeschlagen',
+    exclude: 'Aus der Sitemap ausschließen',
+    priority: 'Priorität',
+    changefreq: 'Änderungshäufigkeit',
+  },
+}

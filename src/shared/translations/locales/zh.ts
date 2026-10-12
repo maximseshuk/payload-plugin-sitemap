@@ -1,0 +1,35 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const zh: Locale = {
+  [PLUGIN_NAME]: {
+    title: '站点地图',
+    generate: '生成',
+    regenerate: '重新生成',
+    open: '打开站点地图',
+    queued: '排队中',
+    running: '生成中',
+    generatedAt: '上次生成',
+    never: '尚未生成。生成站点地图后即可发布。',
+    failed: '上次运行失败：{{error}}',
+    failedTitle: '上次运行失败',
+    urls: 'URL',
+    file: '文件',
+    files: '文件',
+    urlCount_other: 'URL',
+    fileCount_other: '文件',
+    locale: '语言',
+    tenant: '租户',
+    source: '来源',
+    index: '索引',
+    size: '大小',
+    regenerateQueued: '已加入重新生成队列',
+    busy: '站点地图正在生成中。请在完成后重试。',
+    regenerateError: '无法重新生成站点地图。请重试。',
+    loadError: '无法加载站点地图状态。请刷新页面后重试。',
+    failedShort: '失败',
+    exclude: '从站点地图中排除',
+    priority: '优先级',
+    changefreq: '更改频率',
+  },
+}

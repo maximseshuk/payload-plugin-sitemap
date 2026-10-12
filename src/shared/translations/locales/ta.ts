@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const ta: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'தளவரைபடம்',
+    generate: 'உருவாக்கு',
+    regenerate: 'மீண்டும் உருவாக்கு',
+    open: 'தளவரைபடத்தைத் திற',
+    queued: 'வரிசையில் உள்ளது',
+    running: 'உருவாக்கப்படுகிறது',
+    generatedAt: 'கடைசியாக உருவாக்கப்பட்டது',
+    never: 'இன்னும் உருவாக்கப்படவில்லை. வெளியிட தளவரைபடத்தை உருவாக்கவும்.',
+    failed: 'கடைசி இயக்கம் தோல்வியடைந்தது: {{error}}',
+    failedTitle: 'கடைசி இயக்கம் தோல்வியடைந்தது',
+    urls: 'URLகள்',
+    file: 'கோப்பு',
+    files: 'கோப்புகள்',
+    urlCount_one: 'URL',
+    urlCount_other: 'URLகள்',
+    fileCount_one: 'கோப்பு',
+    fileCount_other: 'கோப்புகள்',
+    locale: 'மொழி',
+    tenant: 'குத்தகைதாரர்',
+    source: 'மூலம்',
+    index: 'அட்டவணை',
+    size: 'அளவு',
+    regenerateQueued: 'மீண்டும் உருவாக்குதல் வரிசையில் சேர்க்கப்பட்டது',
+    busy: 'தளவரைபடம் ஏற்கனவே உருவாக்கப்படுகிறது. அது முடிந்ததும் மீண்டும் முயலவும்.',
+    regenerateError: 'தளவரைபடத்தை மீண்டும் உருவாக்க முடியவில்லை. மீண்டும் முயலவும்.',
+    loadError: 'தளவரைபட நிலையை ஏற்ற முடியவில்லை. மீண்டும் முயல பக்கத்தை மீண்டும் ஏற்றவும்.',
+    failedShort: 'தோல்வி',
+    exclude: 'தள வரைபடத்திலிருந்து விலக்கு',
+    priority: 'முன்னுரிமை',
+    changefreq: 'மாற்ற அதிர்வெண்',
+  },
+}

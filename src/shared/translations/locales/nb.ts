@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const nb: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Nettstedskart',
+    generate: 'Generer',
+    regenerate: 'Generer på nytt',
+    open: 'Åpne nettstedskart',
+    queued: 'I kø',
+    running: 'Genererer',
+    generatedAt: 'Sist generert',
+    never: 'Ikke generert ennå. Generer nettstedskartet for å publisere det.',
+    failed: 'Siste kjøring mislyktes: {{error}}',
+    failedTitle: 'Siste kjøring mislyktes',
+    urls: 'URL-er',
+    file: 'Fil',
+    files: 'Filer',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL-er',
+    fileCount_one: 'Fil',
+    fileCount_other: 'Filer',
+    locale: 'Språk',
+    tenant: 'Organisasjon',
+    source: 'Kilde',
+    index: 'Indeks',
+    size: 'Størrelse',
+    regenerateQueued: 'Ny generering lagt i kø',
+    busy: 'Nettstedskartet genereres allerede. Prøv igjen når det er ferdig.',
+    regenerateError: 'Kunne ikke generere nettstedskartet på nytt. Prøv igjen.',
+    loadError: 'Kunne ikke laste status for nettstedskartet. Last inn siden på nytt for å prøve igjen.',
+    failedShort: 'Mislyktes',
+    exclude: 'Utelat fra nettstedskart',
+    priority: 'Prioritet',
+    changefreq: 'Endringsfrekvens',
+  },
+}

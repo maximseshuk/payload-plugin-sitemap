@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const sv: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Webbplatskarta',
+    generate: 'Generera',
+    regenerate: 'Generera om',
+    open: 'Öppna webbplatskarta',
+    queued: 'I kö',
+    running: 'Genererar',
+    generatedAt: 'Senast genererad',
+    never: 'Inte genererad än. Generera webbplatskartan för att publicera den.',
+    failed: 'Senaste körningen misslyckades: {{error}}',
+    failedTitle: 'Senaste körningen misslyckades',
+    urls: 'URL:er',
+    file: 'Fil',
+    files: 'Filer',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL:er',
+    fileCount_one: 'Fil',
+    fileCount_other: 'Filer',
+    locale: 'Språk',
+    tenant: 'Hyresgäst',
+    source: 'Källa',
+    index: 'Index',
+    size: 'Storlek',
+    regenerateQueued: 'Ny generering köad',
+    busy: 'Webbplatskartan genereras redan. Försök igen när den är klar.',
+    regenerateError: 'Det gick inte att generera om webbplatskartan. Försök igen.',
+    loadError: 'Det gick inte att läsa in status för webbplatskartan. Läs in sidan igen för att försöka igen.',
+    failedShort: 'Misslyckades',
+    exclude: 'Uteslut från webbplatskartan',
+    priority: 'Prioritet',
+    changefreq: 'Ändringsfrekvens',
+  },
+}

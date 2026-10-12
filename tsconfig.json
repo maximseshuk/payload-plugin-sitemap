@@ -1,0 +1,12 @@
+{
+  "extends": "@seshuk/payload-plugin-tooling/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "types": ["node"],
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./tests/**/*.ts", "./*.config.ts"],
+  "exclude": ["./tests/app/**/*"]
+}

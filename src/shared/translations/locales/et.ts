@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const et: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Saidikaart',
+    generate: 'Genereeri',
+    regenerate: 'Genereeri uuesti',
+    open: 'Ava saidikaart',
+    queued: 'Järjekorras',
+    running: 'Genereerimine',
+    generatedAt: 'Viimati genereeritud',
+    never: 'Pole veel genereeritud. Avaldamiseks genereeri saidikaart.',
+    failed: 'Viimane käivitus ebaõnnestus: {{error}}',
+    failedTitle: 'Viimane käivitus ebaõnnestus',
+    urls: 'URL-id',
+    file: 'Fail',
+    files: 'Failid',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL-i',
+    fileCount_one: 'Fail',
+    fileCount_other: 'Faili',
+    locale: 'Keel',
+    tenant: 'Üürnik',
+    source: 'Allikas',
+    index: 'Indeks',
+    size: 'Suurus',
+    regenerateQueued: 'Uuesti genereerimine on järjekorras',
+    busy: 'Saidikaardi genereerimine juba käib. Proovi uuesti, kui see on lõppenud.',
+    regenerateError: 'Saidikaarti ei õnnestunud uuesti genereerida. Proovi uuesti.',
+    loadError: 'Saidikaardi olekut ei õnnestunud laadida. Uuesti proovimiseks laadi leht uuesti.',
+    failedShort: 'Ebaõnnestus',
+    exclude: 'Jäta saidikaardist välja',
+    priority: 'Prioriteet',
+    changefreq: 'Muutmise sagedus',
+  },
+}

@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const fa: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'نقشه سایت',
+    generate: 'ساخت',
+    regenerate: 'ساخت دوباره',
+    open: 'باز کردن نقشه سایت',
+    queued: 'در صف',
+    running: 'در حال ساخت',
+    generatedAt: 'آخرین ساخت',
+    never: 'هنوز ساخته نشده. برای انتشار، نقشه سایت را بسازید.',
+    failed: 'آخرین اجرا ناموفق بود: {{error}}',
+    failedTitle: 'آخرین اجرا ناموفق بود',
+    urls: 'نشانی‌ها',
+    file: 'فایل',
+    files: 'فایل‌ها',
+    urlCount_one: 'نشانی',
+    urlCount_other: 'نشانی',
+    fileCount_one: 'فایل',
+    fileCount_other: 'فایل',
+    locale: 'زبان',
+    tenant: 'مستاجر',
+    source: 'منبع',
+    index: 'فهرست',
+    size: 'اندازه',
+    regenerateQueued: 'ساخت دوباره در صف قرار گرفت',
+    busy: 'نقشه سایت در حال ساخت است. پس از پایان آن دوباره تلاش کنید.',
+    regenerateError: 'ساخت دوباره نقشه سایت ممکن نشد. دوباره تلاش کنید.',
+    loadError: 'وضعیت نقشه سایت بارگیری نشد. برای تلاش دوباره، صفحه را دوباره بارگیری کنید.',
+    failedShort: 'ناموفق',
+    exclude: 'حذف از نقشه سایت',
+    priority: 'اولویت',
+    changefreq: 'تکرار تغییر',
+  },
+}

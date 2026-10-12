@@ -1,0 +1,37 @@
+import { PLUGIN_NAME } from '@/shared/constants.js'
+import type { Locale } from '@/shared/translations/index.js'
+
+export const hy: Locale = {
+  [PLUGIN_NAME]: {
+    title: 'Կայքի քարտեզ',
+    generate: 'Ստեղծել',
+    regenerate: 'Ստեղծել նորից',
+    open: 'Բացել կայքի քարտեզը',
+    queued: 'Հերթում է',
+    running: 'Ստեղծվում է',
+    generatedAt: 'Վերջին ստեղծումը',
+    never: 'Դեռ ստեղծված չէ։ Ստեղծեք կայքի քարտեզը՝ այն հրապարակելու համար։',
+    failed: 'Վերջին գործարկումը ձախողվեց՝ {{error}}',
+    failedTitle: 'Վերջին գործարկումը ձախողվեց',
+    urls: 'URL-ներ',
+    file: 'Ֆայլ',
+    files: 'Ֆայլեր',
+    urlCount_one: 'URL',
+    urlCount_other: 'URL',
+    fileCount_one: 'Ֆայլ',
+    fileCount_other: 'Ֆայլ',
+    locale: 'Լեզու',
+    tenant: 'Տենանտ',
+    source: 'Աղբյուր',
+    index: 'Ինդեքս',
+    size: 'Չափ',
+    regenerateQueued: 'Նորից ստեղծումը հերթում է',
+    busy: 'Կայքի քարտեզն արդեն ստեղծվում է։ Կրկին փորձեք, երբ ստեղծումն ավարտվի։',
+    regenerateError: 'Չհաջողվեց նորից ստեղծել կայքի քարտեզը։ Կրկին փորձեք։',
+    loadError: 'Չհաջողվեց բեռնել կայքի քարտեզի կարգավիճակը։ Վերաբեռնեք էջը՝ կրկին փորձելու համար։',
+    failedShort: 'Ձախողվեց',
+    exclude: 'Բացառել կայքի քարտեզից',
+    priority: 'Առաջնահերթություն',
+    changefreq: 'Փոփոխման հաճախականություն',
+  },
+}
