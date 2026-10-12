@@ -95,7 +95,7 @@ export const SitemapPanel: React.FC<Props> = ({ href, initial, initialFiles, wid
         </p>
       )}
       {!widget && status?.error && (
-        <Banner alignIcon="left" className="sitemap-panel__failed" icon={<ErrorIcon />} type="error">
+        <Banner className="sitemap-panel__failed" icon={<ErrorIcon />} type="danger">
           <span className="sitemap-panel__failed-head">
             <strong>{translate('failedTitle')}</strong>
             {status.errorAt && (
@@ -110,44 +110,29 @@ export const SitemapPanel: React.FC<Props> = ({ href, initial, initialFiles, wid
     </>
   )
 
-  const regenerateButton = (
-    <Button
-      buttonStyle={widget ? 'secondary' : 'pill'}
-      disabled={pending}
-      margin={false}
-      onClick={() => void regenerate()}
-      size="small"
-    >
-      {translate(label)}
-    </Button>
-  )
-
   return (
     <section className={`sitemap-panel sitemap-panel--${widget ? 'widget' : 'page'}`}>
-      {widget ? (
-        <header className="sitemap-panel__header">
-          <div className="sitemap-panel__title">
-            <Title className="sitemap-panel__title-text">{translate('title')}</Title>
-          </div>
-          <div className="sitemap-panel__actions">
-            {href && (
-              <Button buttonStyle="tab" el="link" margin={false} size="small" url={href}>
-                {translate('open')}
-              </Button>
-            )}
-            {regenerateButton}
-          </div>
-        </header>
-      ) : (
-        <header className="list-header">
-          <div className="list-header__content">
-            <div className="list-header__title-and-actions">
-              <Title className="list-header__title">{translate('title')}</Title>
-              <div className="list-header__title-actions">{regenerateButton}</div>
-            </div>
-          </div>
-        </header>
-      )}
+      <header className="sitemap-panel__header">
+        <div className="sitemap-panel__title">
+          <Title className="sitemap-panel__title-text">{translate('title')}</Title>
+        </div>
+        <div className="sitemap-panel__actions">
+          {widget && href && (
+            <Button buttonStyle="ghost" el="link" margin={false} size="medium" url={href}>
+              {translate('open')}
+            </Button>
+          )}
+          <Button
+            buttonStyle={widget ? 'secondary' : 'primary'}
+            disabled={pending}
+            margin={false}
+            onClick={() => void regenerate()}
+            size="medium"
+          >
+            {translate(label)}
+          </Button>
+        </div>
+      </header>
       {widget ? body : notice && <div className="sitemap-panel__body">{body}</div>}
       {status && <SitemapStats status={status} widget={widget} />}
       {!widget && <SitemapFiles base={base} initial={initialFiles} status={status} />}

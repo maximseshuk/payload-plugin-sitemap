@@ -1,4 +1,3 @@
-import { NotFoundPage } from '@payloadcms/next/views'
 import type { AdminViewServerProps, PayloadRequest, ServerProps, WidgetServerProps } from 'payload'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -16,8 +15,7 @@ vi.mock('@payloadcms/ui', () => ({
   useConfig: () => ({}),
   useTranslation: () => ({}),
 }))
-vi.mock('@payloadcms/next/templates', () => ({ DefaultTemplate: () => null }))
-vi.mock('@payloadcms/next/views', () => ({ NotFoundPage: () => null }))
+vi.mock('@payloadcms/ui/rsc', () => ({ DefaultTemplate: () => null }))
 
 afterEach(cleanup)
 
@@ -51,13 +49,18 @@ describe('widget', () => {
 })
 
 describe('view', () => {
+  const server = {
+    notFound: () => {
+      throw new Error('not-found')
+    },
+  }
   const params = { segments: ['sitemap'] }
   const viewProps = (req: PayloadRequest) =>
     ({
-      importMap: {},
       initPageResult: { permissions: {}, req, visibleEntities: { collections: [], globals: [] } },
       params,
       searchParams: {},
+      server,
       user: req.user ?? undefined,
     }) as unknown as AdminViewServerProps
   const navProps = (req: PayloadRequest, segments = params.segments) =>
@@ -76,7 +79,7 @@ describe('view', () => {
     const anonymous = await reqOf(payload)
 
     for (const blocked of [anonymous, other]) {
-      expect((await SitemapView(viewProps(blocked))).type).toBe(NotFoundPage)
+      await expect(SitemapView(viewProps(blocked))).rejects.toThrow('not-found')
       expect(await SitemapNavLink(navProps(blocked))).toBeNull()
     }
 
@@ -93,9 +96,16 @@ describe('view', () => {
     ])
 
     const active = await SitemapNavLink(navProps(req))
-    expect(active?.type).toBe('div')
-    expect(active?.props).toMatchObject({ 'aria-current': 'page', className: 'nav__link', id: 'nav-sitemap' })
+    expect(active?.props.children.props.children.props).toMatchObject({
+      'aria-current': 'page',
+      className: 'nav__link nav__link--selected',
+      href: '/admin/sitemap',
+    })
+    expect(active?.props.children.props.children.props.children.props.children).toBe('Sitemap')
     const idle = await SitemapNavLink(navProps(req, ['collections', 'pages']))
-    expect(idle?.props).toMatchObject({ className: 'nav__link', href: '/admin/sitemap', id: 'nav-sitemap' })
+    expect(idle?.props.children.props.children.props).toMatchObject({
+      'aria-current': undefined,
+      className: 'nav__link',
+    })
   })
 })

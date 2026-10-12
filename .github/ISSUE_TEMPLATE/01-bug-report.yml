@@ -54,12 +54,12 @@ body:
         Paste output from `pnpm payload info` or list your versions.
         Please use specific version numbers instead of "latest" to help us debug faster.
       placeholder: |
-        @seshuk/payload-plugin-sitemap: 0.1.0
-        payload: 3.90.2
+        @seshuk/payload-plugin-sitemap: 1.0.0-beta.1
+        payload: 4.0.0-beta.1
         next: 16.4.0
-        node: 22.18.0
-        database adapter: @payloadcms/db-sqlite 3.90.2
-        storage adapter: @payloadcms/storage-s3 3.90.2 (if used)
+        node: 24.15.0
+        database adapter: @payloadcms/db-sqlite 4.0.0-beta.1
+        storage adapter: @payloadcms/storage-s3 4.0.0-beta.1 (if used)
       render: shell
     validations:
       required: true

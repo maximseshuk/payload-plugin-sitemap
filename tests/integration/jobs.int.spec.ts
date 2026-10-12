@@ -86,7 +86,12 @@ describe('regeneration', () => {
     const { payload } = await start({ ...base, jobs: { regenerate: { delay: 60_000 } } })
     const req = await reqOf(payload)
     const running = await queueSitemap(req)
-    await payload.update({ collection: 'payload-jobs', data: { processing: true }, id: running, overrideAccess: true })
+    await payload.update({
+      collection: 'payload-jobs',
+      data: { processingUntil: new Date(Date.now() + 60_000).toISOString() },
+      id: running,
+      overrideAccess: true,
+    })
 
     const next = await queueSitemap(req)
     expect(next).not.toBe(running)

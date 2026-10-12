@@ -27,7 +27,7 @@ describe('lock', () => {
         }),
       ],
     })
-    const reqs = await Promise.all(Array.from({ length: 7 }, () => reqOf(payload)))
+    const reqs = await Promise.all(Array.from({ length: 8 }, () => reqOf(payload)))
     const results = await Promise.allSettled(
       reqs.map(async (req) => {
         try {

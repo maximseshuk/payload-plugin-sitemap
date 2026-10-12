@@ -1,5 +1,11 @@
-nodeVersion: 22.18.0
+nodeVersion: 24.15.0
 pmOnFail: download
+
+catalog:
+  '@types/node': ^26.6.5
+  react: 19.3.0
+  react-dom: 19.3.0
+  typescript: 7.0.2
 
 allowBuilds:
   esbuild: true
@@ -8,6 +14,20 @@ allowBuilds:
   sharp: true
 minimumReleaseAgeExclude:
   - '@seshuk/payload-plugin-tooling'
+  - '@payloadcms/db-mongodb@4.0.0-beta.1'
+  - '@payloadcms/db-postgres@4.0.0-beta.1'
+  - '@payloadcms/db-sqlite@4.0.0-beta.1'
+  - '@payloadcms/drizzle@4.0.0-beta.1'
+  - '@payloadcms/graphql@4.0.0-beta.1'
+  - '@payloadcms/next@4.0.0-beta.1'
+  - '@payloadcms/plugin-cloud-storage@4.0.0-beta.1'
+  - '@payloadcms/plugin-multi-tenant@4.0.0-beta.1'
+  - '@payloadcms/plugin-seo@4.0.0-beta.1'
+  - '@payloadcms/storage-s3@4.0.0-beta.1'
+  - '@payloadcms/tanstack-start@4.0.0-beta.1'
+  - '@payloadcms/translations@4.0.0-beta.1'
+  - '@payloadcms/ui@4.0.0-beta.1'
+  - payload@4.0.0-beta.1
   - '@oxfmt/binding-android-arm-eabi@0.73.0'
   - '@oxfmt/binding-android-arm64@0.73.0'
   - '@oxfmt/binding-darwin-arm64@0.73.0'

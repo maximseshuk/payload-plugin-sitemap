@@ -1,6 +1,6 @@
 import { sql } from '@payloadcms/db-sqlite'
-import type { Payload, PayloadRequest } from 'payload'
-import { createLocalReq } from 'payload'
+import type { Payload } from 'payload'
+import { createPayloadRequest } from 'payload'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { SitemapFile, SitemapPluginOptions } from '@/index.js'
@@ -67,11 +67,12 @@ const insert = async (payload: Payload, table: string, count: number, row: (id: 
 
 const seed = async (payload: Payload) => {
   const now = new Date().toISOString()
-  await insert(payload, 'pages', SIZE.pages, (id) => [{ _status: 'published', createdAt: now, id, updatedAt: now }])
+  await insert(payload, 'pages', SIZE.pages, (id) => [{ createdAt: now, id, updatedAt: now }])
   await insert(payload, 'pages_locales', SIZE.pages, (id) =>
     ['en', 'de'].map((locale) => ({
       _locale: locale,
       _parentID: id,
+      _status: 'published',
       slug: `${locale}-page-${id}`,
       title: `Page ${id}`,
     })),
@@ -102,7 +103,7 @@ const measure = async (payload: Payload, options: SitemapPluginOptions) => {
     peak = Math.max(peak, process.memoryUsage().rss)
   }, 10)
   const began = performance.now()
-  const files = await generateSitemap((await createLocalReq({}, payload)) as PayloadRequest)
+  const files = await generateSitemap(await createPayloadRequest({ payload }))
   const ms = Math.round(performance.now() - began)
   clearInterval(timer)
   const queries = find.mock.calls.length

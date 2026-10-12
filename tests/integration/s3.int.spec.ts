@@ -3,7 +3,7 @@ import type { Payload } from 'payload'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { SitemapPluginOptions } from '@/index.js'
-import { DEFAULT_FILES_SLUG, generateSitemap, sitemap } from '@/index.js'
+import { DEFAULT_FILES_SLUG, generateSitemap } from '@/index.js'
 
 import type { FakeS3 } from '../helpers/int/fakeS3.js'
 import { fakeS3 } from '../helpers/int/fakeS3.js'
@@ -39,7 +39,7 @@ const startS3 = async () => {
       responseChecksumValidation: 'WHEN_REQUIRED',
     },
   })
-  return start(options, { plugins: [sitemap(options), storage] })
+  return start(options, { storage: [storage] })
 }
 
 const generate = async (payload: Payload) => generateSitemap(await reqOf(payload))

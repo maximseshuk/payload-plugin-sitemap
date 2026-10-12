@@ -140,7 +140,7 @@ describe('generation', () => {
     expect(await body(payload, '/sitemap.xml?locale=fr')).toBe(read(dir, 'sitemap-en.xml'))
   })
 
-  it('lists a published page in every locale, with fallback values in the URL', async () => {
+  it('lists a page in a locale only when that locale is published', async () => {
     const { dir, payload } = await start(
       { ...base, output: { splitLocales: true }, siteUrl: ({ locale }) => `https://${locale}.example.com` },
       {},
@@ -186,10 +186,10 @@ describe('generation', () => {
     expect(en).toContain('<loc>https://en.example.com/en/en-only</loc>')
     expect(en).toContain('<loc>https://en.example.com/en/de-draft</loc>')
     expect(en).toContain('<xhtml:link rel="alternate" hreflang="de" href="https://de.example.com/de/shared"/>')
+    expect(en).not.toContain('https://de.example.com/de/en-only')
+    expect(en).not.toContain('https://de.example.com/de/de-draft')
     const de = read(dir, 'de-pages-1.xml')
-    expect(de.match(/<url>/g)).toHaveLength(3)
-    expect(de).toContain('<loc>https://de.example.com/de/en-only</loc>')
-    expect(de).toContain('<loc>https://de.example.com/de/entwurf</loc>')
+    expect(de.match(/<url>/g)).toHaveLength(1)
     expect(de).toContain('<loc>https://de.example.com/de/shared</loc>')
   })
 
@@ -505,8 +505,8 @@ describe('generation', () => {
     expect(entry('featured')).toContain(`<loc>${SITE}/blog/news/featured</loc>`)
     expect(entry('featured')).toContain('<priority>1</priority>')
     expect(entry('featured')).toContain('<changefreq>weekly</changefreq>')
-    expect(entry('featured')).toContain(`<image:loc>${SERVER}/api/media/file/cover.txt</image:loc>`)
-    expect(entry('featured')).toContain(`<image:loc>${SERVER}/api/media/file/extra.txt</image:loc>`)
+    expect(entry('featured')).toContain(`<image:loc>${SERVER}/api/media/file/cover-original.txt</image:loc>`)
+    expect(entry('featured')).toContain(`<image:loc>${SERVER}/api/media/file/extra-original.txt</image:loc>`)
     expect(entry('featured')).toContain(`<image:loc>${SITE}/photo.jpg</image:loc>`)
     expect(entry('featured')?.match(/<image:image>/g)).toHaveLength(3)
     expect(entry('plain')).toContain('<priority>0.2</priority>')

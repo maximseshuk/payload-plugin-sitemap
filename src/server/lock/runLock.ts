@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import type { PayloadRequest, Where } from 'payload'
-import { createLocalReq, ValidationError } from 'payload'
+import { createPayloadRequest, ValidationError } from 'payload'
 
 import { fail } from '@/server/options/fail.js'
 import { LOCKS_SLUG } from '@/shared/constants.js'
@@ -17,7 +17,7 @@ type LockDoc = { expiresAt?: null | string; id: number | string; owner?: null | 
 export type RunLock = { check: () => Promise<void>; hold: () => Promise<void>; release: () => Promise<void> }
 
 const lockRequest = (req: PayloadRequest): Promise<PayloadRequest> =>
-  createLocalReq({ context: req.context }, req.payload)
+  createPayloadRequest({ context: req.context, payload: req.payload })
 
 const expiresAt = (): string => new Date(Date.now() + TTL).toISOString()
 

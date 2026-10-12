@@ -40,6 +40,7 @@ export const filesCollection = (options: ResolvedOptions): CollectionConfig => {
       useAsTitle: 'name',
     },
     labels: { plural: label('files'), singular: label('file') },
+    authorship: false,
     upload,
     versions: false,
     ...overrides,

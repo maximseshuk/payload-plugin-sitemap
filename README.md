@@ -56,7 +56,8 @@ The dashboard widget:
 | 0.x    | 3       | 22+     | `@seshuk/payload-plugin-sitemap@0`    |
 
 - 1.x is in beta under the `beta` npm tag while Payload 4 is in beta.
-- 0.x needs Payload 3.83 or later, with `@payloadcms/next` (every Payload 3 Next.js app has it).
+- 1.x works with both Payload 4 frameworks: Next.js (`@payloadcms/next`) and TanStack Start (`@payloadcms/tanstack-start`).
+- 0.x needs Payload 3.83 or later.
 - Until 1.0.0, 0.x gets the same features as 1.x. After that, it gets only critical and high-severity security fixes. See [SECURITY.md](SECURITY.md).
 
 ### Quick start
@@ -141,7 +142,7 @@ If the run fails before the switch, it removes the files it stored, and the prev
 
 #### What gets listed
 
-- **Published documents only.** Drafts are never listed. In a collection with drafts, only published documents are listed. With Payload's `localizeStatus`, the status is kept per locale. A document is then listed in a locale only when it is published in that locale. Saving a draft that was never published does not queue a run.
+- **Published documents only.** Drafts are never listed. In a collection with drafts, only published documents are listed. When the collection has localized fields, Payload keeps the status per locale. A document is then listed in a locale only when it is published in that locale. Saving a draft that was never published does not queue a run.
 - **Public documents only.** Documents are read as an anonymous visitor (`overrideAccess: false`, no user). The collection's own `read` access decides what is public, so members-only or tenant-scoped documents stay out.
 - **Default access lists nothing.** Payload's default access allows only logged-in users, so such a collection lists nothing. Give it public read access, for example `access: { read: () => true }`, or set `query: { overrideAccess: true }` for that source.
 - **Tenants are not split by default.** With the multi-tenant plugin, an anonymous read is not limited to one tenant. Without the [`tenants`](#multi-tenant) option, every tenant's documents end up in one sitemap.
@@ -531,15 +532,16 @@ sitemap({
 By default, files go into the `sitemap-files` upload collection.
 
 - It is hidden in the admin panel. Nobody can create, change or delete its documents through the API.
-- Each stored file name ends with a short hash of its content, such as `posts-1.3f2a9c1b7e4d.xml`, so a new version never overwrites the file that crawlers are reading.
+- Each stored file name ends with a short hash of its content, so a new version never overwrites the file that crawlers are reading.
+- Payload 4 storage adapters store a file under a key such as `<uuid>/posts-1.3f2a9c1b7e4d-original.xml`.
 - The endpoints and the sitemap index always use the plain name (`posts-1.xml`). The endpoints send the file themselves.
 
-In Payload 3, configure your storage adapter for it in the `plugins` list, like any other upload collection:
+In Payload 4, configure your storage adapter for it in the top-level `storage` list, like any other upload collection:
 
 ```ts
 export default buildConfig({
   // ...
-  plugins: [
+  storage: [
     s3Storage({
       collections: { media: true, 'sitemap-files': true },
       // ...
@@ -676,19 +678,9 @@ Every run takes a lock in the hidden `sitemap-locks` collection, whether it come
 
 #### Retries
 
-Set `jobs: { enableConcurrencyControl: true }` in your Payload config. Without it, two sitemap jobs can run in parallel.
-
-A sitemap job that finds the lock busy fails and retries with growing waits: 30 seconds, then 1, 2, 4 and 8 minutes. That is 6 attempts (1 + 5 retries) in about 15 minutes, so the job usually runs after the other run ends.
+The job runner never runs two sitemap jobs in parallel. A sitemap job that finds the lock busy fails and retries with growing waits: 30 seconds, then 1, 2, 4 and 8 minutes. That is 6 attempts (1 + 5 retries) in about 15 minutes, so the job usually runs after the other run ends.
 
 If the lock stays busy through all 6 attempts, the job fails for good. The next change or scheduled run queues a new one.
-
-#### Stuck jobs
-
-With concurrency control on, Payload 3 skips every sitemap job while another sitemap job is marked `processing: true`.
-
-- A worker that crashes during a job leaves that mark, and Payload does not clear it. Later sitemap jobs then wait.
-- The sitemap lock still expires after 5 minutes, but the job queue stays blocked.
-- To fix it, find the job in `payload-jobs` (`taskSlug: 'sitemap-generate'`, `processing: true`). Cancel it with `payload.jobs.cancelByID({ id })`, or set `processing: false` on it.
 
 #### Without Payload jobs
 
@@ -796,6 +788,10 @@ export default withPayload({
 
 Rewrites cannot pass `?tenant=` or `?locale=` to Payload: Next.js does not give the query of a rewrite destination to the API route. When the app serves several domains, one per locale or one per tenant, use [`sitemapProxy`](#several-domains) route handlers instead, with `serverUrl` set to the address of the app itself.
 
+#### Payload in the same TanStack Start app
+
+TanStack Start has no rewrites. Add the [TanStack Start routes](#payload-on-another-host) below, with `serverUrl` set to the address of the app itself.
+
 #### Payload on another host
 
 `sitemapProxy` turns a site request into an API request and passes the file back.
@@ -811,6 +807,20 @@ With Next.js route handlers:
 import { sitemapProxy } from '@seshuk/payload-plugin-sitemap/proxy'
 
 export const GET = sitemapProxy({ serverUrl: 'https://cms.example.com' })
+```
+
+With TanStack Start server routes:
+
+```ts
+// src/app/sitemap[.]xml.ts, and src/app/sitemaps.$.ts with the path '/sitemaps/$'
+import { sitemapProxy } from '@seshuk/payload-plugin-sitemap/proxy'
+import { createFileRoute } from '@tanstack/react-router'
+
+const proxy = sitemapProxy({ serverUrl: 'https://cms.example.com' })
+
+export const Route = createFileRoute('/sitemap.xml')({
+  server: { handlers: { GET: ({ request }) => proxy(request) } },
+})
 ```
 
 With Nuxt:
@@ -882,11 +892,33 @@ This example is for a site that shares its host with Payload:
 - When Payload runs on another host, such as `cms.example.com`, leave out the `/api` and `/admin` lines.
 - The `VERCEL_ENV` check keeps preview deployments out of search engines. On another host, check your own environment variable.
 
+In TanStack Start, return the same rules as text from a server route:
+
+```ts
+// src/app/robots[.]txt.ts
+import { createFileRoute } from '@tanstack/react-router'
+
+const robots = `User-agent: *
+Allow: /
+Allow: /api/sitemap.xml
+Allow: /api/sitemaps/
+Allow: /api/media/file/
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://example.com/sitemap.xml
+`
+
+export const Route = createFileRoute('/robots.txt')({
+  server: { handlers: { GET: () => new Response(robots, { headers: { 'Content-Type': 'text/plain' } }) } },
+})
+```
+
 `Disallow` stops crawling, not indexing. A blocked URL can still appear in search results if other sites link to it. To keep a page out of the index, use a `noindex` meta tag.
 
 ### Run from code
 
-Two functions start a run from your own code: a hook, an endpoint, a cron or a script. Both take a Payload request (`req`). In a script, build one with `await createLocalReq({}, payload)` from `payload`.
+Two functions start a run from your own code: a hook, an endpoint, a cron or a script. Both take a Payload request (`req`). In a script, build one with `await createPayloadRequest({ payload })` from `payload`.
 
 ```ts
 import { generateSitemap, queueSitemap } from '@seshuk/payload-plugin-sitemap'
@@ -924,25 +956,27 @@ Generation pages through each collection 250 documents at a time. It writes each
 
 `pnpm test:stress` seeds SQLite with 365,000 URLs in all: 120,000 pages in two locales, 60,000 posts, a source with 30,000 URLs per locale and 5,000 static entries. With the [index below](#index-for-localized-collections), one run takes:
 
-- 11 to 12 seconds;
+- 15 to 16 seconds;
 - 3,128 database reads;
-- at most 306 MB of extra memory.
+- at most 468 MB of extra memory.
 
 Most of the time goes to the database adapter reading documents, not to writing XML.
+
+A collection with drafts costs one extra read per 250 documents, to get the status in each locale. On Payload 4, filtering the status in the query instead makes the run about four times slower. The cost is memory: with the filter in the query, the peak was 368 MB instead of 468 MB, mostly short-lived objects that garbage collection frees.
 
 #### Many tenants
 
 Each file is one document in the files collection, so the number of tenants has no fixed limit. On SQLite with 10,000 tenants and 40,000 files written to local disk:
 
-- the first run takes about 67 seconds;
-- a run with no changes takes about 9 seconds;
+- the first run takes about 56 seconds;
+- a run with no changes takes about 11 seconds;
 - an endpoint answers in under a millisecond.
 
 Uploads to remote storage add their own time for each changed file. A change in a collection without the tenant field, such as shared posts, changes that file and the index of every tenant. All of them are then uploaded again.
 
 #### Index for localized collections
 
-Payload's SQL adapters (SQLite and Postgres) create the `<collection>_locales` table of a localized collection without an index on `_parent_id`. Each read of that collection then scans the whole locales table once per document, so generation time grows with the square of the collection size. The CI-size stress run (12,000 pages, 8,000 posts) takes 31.7 seconds without the index and 1.3 seconds with it.
+Payload's SQL adapters (SQLite and Postgres) create the `<collection>_locales` table of a localized collection without an index on `_parent_id`. Each read of that collection then scans the whole locales table once per document, so generation time grows with the square of the collection size. The CI-size stress run (12,000 pages, 8,000 posts) takes 47.8 seconds without the index and 1.9 seconds with it.
 
 For a large localized collection, add a migration that creates the index:
 

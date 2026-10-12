@@ -14,15 +14,13 @@ const pages: SitemapSource = { type: 'collection', collection: 'pages', locales:
 
 const base: SitemapPluginOptions = { jobs: { regenerate: false }, siteUrl: SITE, sources: [pages] }
 
-const concurrent = { jobs: { enableConcurrencyControl: true } }
-
 type Job = {
   completedAt?: null | string
   error?: { message?: string } | null
   hasError?: boolean | null
   id: number | string
   log?: { error?: { message?: string }; state: string; taskSlug: string }[] | null
-  processing?: boolean | null
+  processingUntil?: null | string
   totalTried?: null | number
   waitUntil?: null | string
 }
@@ -122,11 +120,8 @@ describe('retry', () => {
     expect(await (await call(payload, '/sitemaps/pages-1.xml')).text()).toContain(`<loc>${SITE}/about</loc>`)
   })
 
-  it.each([
-    ['without', {}],
-    ['with', concurrent],
-  ])('fails a job for good only on the sixth attempt behind a held lock %s concurrency control', async (_, extra) => {
-    const { dir, payload } = await start(base, extra)
+  it('fails a job for good only on the sixth attempt behind a held lock', async () => {
+    const { dir, payload } = await start(base)
     await holdLock(payload)
     const id = await queueSitemap(await reqOf(payload))
 
@@ -134,7 +129,7 @@ describe('retry', () => {
       const { after, before } = await runJobs(payload)
       const job = await jobOf(payload, id)
       expect(job.hasError).toBeFalsy()
-      expect(job.processing).toBeFalsy()
+      expect(job.processingUntil).toBeFalsy()
       expect(job.totalTried).toBe(attempt)
       expect(job.log![attempt - 1]).toMatchObject({ error: { message: BUSY }, state: 'failed', taskSlug: TASK_SLUG })
       expect(waitUntilOf(job)).toBeGreaterThanOrEqual(before + 2 ** (attempt - 1) * 30_000)
@@ -174,25 +169,22 @@ describe('retry', () => {
     let entered!: () => void
     const gate = new Promise<void>((resolve) => (release = resolve))
     const started = new Promise<void>((resolve) => (entered = resolve))
-    const { payload } = await start(
-      {
-        ...base,
-        sources: [
-          {
-            type: 'custom',
-            entries: async ({ siteUrl }) => {
-              runs++
-              entered()
-              await gate
-              return [{ url: `${siteUrl}/slow` }]
-            },
-            locales: ['en'],
-            name: 'slow',
+    const { payload } = await start({
+      ...base,
+      sources: [
+        {
+          type: 'custom',
+          entries: async ({ siteUrl }) => {
+            runs++
+            entered()
+            await gate
+            return [{ url: `${siteUrl}/slow` }]
           },
-        ],
-      },
-      concurrent,
-    )
+          locales: ['en'],
+          name: 'slow',
+        },
+      ],
+    })
     const first = await queueJob(payload)
     const second = await queueJob(payload)
 
@@ -200,7 +192,7 @@ describe('retry', () => {
     await started
     expect((await runJobs(payload)).result).toEqual({ noJobsRemaining: true, remainingJobsFromQueried: 0 })
     const waiting = await jobOf(payload, second)
-    expect(waiting.processing).toBeFalsy()
+    expect(waiting.processingUntil).toBeFalsy()
     expect(waiting.totalTried).toBe(0)
     release()
 
@@ -211,28 +203,22 @@ describe('retry', () => {
     expect(await openJobs(payload)).toHaveLength(0)
   })
 
-  it('blocks every later sitemap job behind a job stuck in processing with concurrency control', async () => {
-    const { payload } = await start({ ...base, jobs: { regenerate: { delay: 0 } } }, concurrent)
+  it('runs a job stuck in processing again once its lease expired', async () => {
+    const { payload } = await start(base)
     const stuck = await queueJob(payload)
-    await payload.update({ collection: JOBS, data: { processing: true }, depth: 0, id: stuck, overrideAccess: true })
+    const lease = (until: number) =>
+      payload.update({
+        collection: JOBS,
+        data: { processingUntil: new Date(until).toISOString() },
+        depth: 0,
+        id: stuck,
+        overrideAccess: true,
+      })
 
-    await publish(payload, 'about')
-    const open = await openJobs(payload)
-    expect(open.map((job) => job.id)).toEqual([stuck, expect.anything()])
+    await lease(Date.now() + 60_000)
     expect((await runJobs(payload)).result).toEqual({ noJobsRemaining: true, remainingJobsFromQueried: 0 })
-    expect((await jobOf(payload, open[1]!.id)).totalTried).toBe(0)
-    expect((await payload.findGlobal({ overrideAccess: true, slug: STATUS_SLUG })).generatedAt).toBeFalsy()
-  })
-
-  it('runs later sitemap jobs past a job stuck in processing without concurrency control', async () => {
-    const { payload } = await start({ ...base, jobs: { regenerate: { delay: 0 } } })
-    const stuck = await queueJob(payload)
-    await payload.update({ collection: JOBS, data: { processing: true }, depth: 0, id: stuck, overrideAccess: true })
-
-    await publish(payload, 'about')
-    const open = await openJobs(payload)
-    expect(open.map((job) => job.id)).toEqual([stuck, expect.anything()])
-    expect((await runJobs(payload)).result.jobStatus).toEqual({ [open[1]!.id]: { status: 'success' } })
+    await lease(Date.now() - 1000)
+    expect((await runJobs(payload)).result.jobStatus).toEqual({ [stuck]: { status: 'success' } })
     expect((await payload.findGlobal({ overrideAccess: true, slug: STATUS_SLUG })).generatedAt).toBeTruthy()
   })
 

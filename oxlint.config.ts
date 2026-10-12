@@ -3,7 +3,13 @@ import { defineConfig } from 'oxlint'
 
 export default defineConfig({
   ...oxlintBase,
-  ignorePatterns: [...oxlintBase.ignorePatterns, 'tests/.next', '**/next-env.d.ts'],
+  ignorePatterns: [
+    ...oxlintBase.ignorePatterns,
+    'tests/.next',
+    '**/next-env.d.ts',
+    'tests/tanstack/routeTree.gen.ts',
+    'tests/tanstack/app/_payload/importMap.js',
+  ],
   overrides: [
     ...oxlintBase.overrides,
     {

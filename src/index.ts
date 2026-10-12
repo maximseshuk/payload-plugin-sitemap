@@ -25,7 +25,7 @@ import type { ResolvedOptions, SitemapFile, SitemapPluginOptions } from '@/share
 
 export const sitemap = definePlugin<SitemapPluginOptions>({
   slug: PLUGIN_NAME,
-  plugin: ({ config, plugins: _plugins, ...pluginOptions }) => {
+  plugin: ({ config, options: pluginOptions }) => {
     const options = resolveOptions(pluginOptions)
     checkLocales(config, options)
     const schema = {
@@ -37,15 +37,9 @@ export const sitemap = definePlugin<SitemapPluginOptions>({
       globals: [...(config.globals ?? []), statusGlobal(options)],
       i18n: { ...config.i18n, translations: mergeTranslations(config.i18n?.translations) },
     }
-    const concurrency = Boolean(config.jobs?.enableConcurrencyControl)
     const tasks = (enabled: boolean) =>
       options.jobs
-        ? {
-            jobs: {
-              ...config.jobs,
-              tasks: [...(config.jobs?.tasks ?? []), sitemapTask(options, concurrency, enabled)],
-            },
-          }
+        ? { jobs: { ...config.jobs, tasks: [...(config.jobs?.tasks ?? []), sitemapTask(options, enabled)] } }
         : {}
     if (pluginOptions.enabled === false) return { ...config, ...schema, ...tasks(false) }
 

@@ -55,9 +55,7 @@ describe('sitemap plugin', () => {
   })
 
   it('runs the task exclusive and retries it with backoff', () => {
-    expect(apply({ siteUrl: 'https://example.com' }).jobs?.tasks?.[0]?.concurrency).toBeUndefined()
-    const task = apply({ siteUrl: 'https://example.com' }, { ...base, jobs: { enableConcurrencyControl: true } }).jobs
-      ?.tasks?.[0]
+    const task = apply({ siteUrl: 'https://example.com' }).jobs?.tasks?.[0]
     expect(task?.concurrency).toMatchObject({ exclusive: true })
     expect(task?.retries).toEqual({ attempts: 5, backoff: { type: 'exponential', delay: 30_000 } })
   })

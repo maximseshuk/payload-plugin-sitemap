@@ -1,19 +1,21 @@
 'use client'
 
 import {
+  Button,
   ChevronIcon,
   ListQueryProvider,
+  ListSearchFilter,
   PageControlsComponent,
   Pill,
   Popup,
   PopupList,
   ReactSelect,
-  SearchFilter,
-  SearchIcon,
+  SimplePagination,
   SortColumn,
   Table,
+  TableSection,
 } from '@payloadcms/ui'
-import type { ClientCollectionConfig, ClientField, Column, PaginatedDocs } from 'payload'
+import type { ClientField, Column, PaginatedDocs } from 'payload'
 import React, { useEffect, useId, useRef, useState } from 'react'
 
 import { FILES_LIMIT } from '@/shared/constants.js'
@@ -43,13 +45,12 @@ const options = (values: string[]): Option[] => values.map((value) => ({ label: 
 
 const unsorted = new Set(['tenant'])
 
-const pageConfig = {} as ClientCollectionConfig
-
 const column = (accessor: string, label: string, renderedCells: React.ReactNode[]): Column => ({
   accessor,
   active: true,
   field: { name: accessor, type: 'text' } as ClientField,
   Heading: <SortColumn disable={unsorted.has(accessor)} Label={label} name={accessor} />,
+  isLinkedColumn: accessor === 'filename',
   renderedCells,
 })
 
@@ -75,7 +76,6 @@ export const SitemapFiles: React.FC<Props> = ({ base, initial, status }) => {
   const [files, setFiles] = useState<SitemapFilesPage | undefined>(initial)
   const [failed, setFailed] = useState(false)
   const [open, setOpen] = useState(false)
-  const [menu, setMenu] = useState(false)
   const [filters, setFilters] = useState<FileFilters>({})
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<string | undefined>(undefined)
@@ -252,61 +252,63 @@ export const SitemapFiles: React.FC<Props> = ({ base, initial, status }) => {
     >
       <div className="sitemap-panel__files">
         <div className="sitemap-panel__controls">
-          <div className="search-bar">
-            <SearchIcon />
-            <SearchFilter
-              handleChange={(value) => setSearch(value?.trim() ?? '')}
+          <div className="sitemap-panel__search">
+            <ListSearchFilter
               label={t('general:searchBy', { label: t('upload:fileName') })}
+              onSearchChange={(value) => setSearch(value?.trim() ?? '')}
             />
-            {(hasFilters || fields.length > 0) && (
-              <div className="search-bar__actions">
-                {hasFilters && (
-                  <Pill
-                    aria-controls={`${id}-where`}
-                    aria-expanded={open}
-                    icon={<ChevronIcon direction={open ? 'up' : 'down'} />}
-                    onClick={() => setOpen(!open)}
-                    pillStyle={filtered ? 'dark' : 'light'}
-                    size="small"
-                  >
-                    {t('general:filters')}
-                  </Pill>
-                )}
-                {fields.length > 0 && (
-                  <Popup
-                    button={
-                      <Pill
-                        icon={<ChevronIcon direction={menu ? 'up' : 'down'} />}
-                        pillStyle={groupBy ? 'dark' : 'light'}
-                        size="small"
+          </div>
+          <div className="sitemap-panel__control-actions">
+            {hasFilters && (
+              <Button
+                buttonStyle="secondary"
+                extraButtonProps={{ 'aria-controls': `${id}-where`, 'aria-expanded': open }}
+                icon={<ChevronIcon direction={open ? 'up' : 'down'} size={16} />}
+                margin={false}
+                onClick={() => setOpen(!open)}
+                selected={open || filtered}
+                size="medium"
+              >
+                {t('general:filters')}
+              </Button>
+            )}
+            {fields.length > 0 && (
+              <Popup
+                horizontalAlign="right"
+                popupAriaLabel={groupByLabel}
+                popupType="menu"
+                render={({ close }) => (
+                  <PopupList.RadioGroup>
+                    {[{ label: t('general:none'), value: undefined }, ...fields].map(({ label, value }) => (
+                      <PopupList.RadioGroupItem
+                        active={value === groupBy}
+                        key={value ?? ''}
+                        onClick={() => {
+                          close()
+                          setGroupBy(value)
+                        }}
                       >
-                        {groupByLabel}
-                      </Pill>
-                    }
-                    buttonType="custom"
-                    horizontalAlign="right"
-                    onToggleClose={() => setMenu(false)}
-                    onToggleOpen={setMenu}
-                    render={({ close }) => (
-                      <PopupList.ButtonGroup>
-                        {[{ label: t('general:none'), value: undefined }, ...fields].map(({ label, value }) => (
-                          <PopupList.Button
-                            active={value === groupBy}
-                            key={value ?? ''}
-                            onClick={() => {
-                              close()
-                              setGroupBy(value)
-                            }}
-                          >
-                            {label}
-                          </PopupList.Button>
-                        ))}
-                      </PopupList.ButtonGroup>
-                    )}
-                    verticalAlign="bottom"
-                  />
+                        {label}
+                      </PopupList.RadioGroupItem>
+                    ))}
+                  </PopupList.RadioGroup>
                 )}
-              </div>
+                renderButton={({ active, onClick, onKeyDown, ...aria }) => (
+                  <Button
+                    buttonStyle="secondary"
+                    extraButtonProps={{ ...aria, onKeyDown }}
+                    icon={<ChevronIcon direction={active ? 'up' : 'down'} size={16} />}
+                    margin={false}
+                    onClick={onClick}
+                    selected={active || Boolean(groupBy)}
+                    size="medium"
+                  >
+                    {groupByLabel}
+                  </Button>
+                )}
+                theme="auto"
+                verticalAlign="bottom"
+              />
             )}
           </div>
         </div>
@@ -331,27 +333,26 @@ export const SitemapFiles: React.FC<Props> = ({ base, initial, status }) => {
         )}
         {files &&
           grouped &&
-          groups.map((group) => (
-            <div className="table-wrap table-wrap--group-by sitemap-panel__table" key={group.value ?? ''}>
-              <header className="group-by-header">
-                <h4 className="group-by-header__heading">{groupLabel(group.value)}</h4>
-              </header>
-              <Table
-                columns={columns(group.docs)}
-                data={ordered(group.docs).map(({ filename }) => ({ id: filename }))}
-              />
-              <PageControlsComponent
-                collectionConfig={pageConfig}
-                data={paginated(group.docs, group, files.limit)}
-                handlePageChange={async (value) => loadGroup(group.value, value)}
-                handlePerPageChange={async (value) => setLimit(value)}
-                limit={limit}
-              />
-            </div>
+          groups.map((group, index) => (
+            <TableSection className="sitemap-panel__table" key={group.value ?? ''}>
+              <TableSection.Header heading={groupLabel(group.value)}>
+                <SimplePagination
+                  data={paginated(group.docs, group, files.limit)}
+                  onChange={(value) => void loadGroup(group.value, value)}
+                  tableId={`${id}-group-${index}`}
+                />
+              </TableSection.Header>
+              <TableSection.Content>
+                <Table
+                  columns={columns(group.docs)}
+                  data={ordered(group.docs).map(({ filename }) => ({ id: filename }))}
+                  id={`${id}-group-${index}`}
+                />
+              </TableSection.Content>
+            </TableSection>
           ))}
         {files && (
           <PageControlsComponent
-            collectionConfig={pageConfig}
             data={paginated(files.docs, files, files.limit)}
             handlePageChange={async (value) => setPaging({ page: value, scope })}
             handlePerPageChange={async (value) => setLimit(value)}

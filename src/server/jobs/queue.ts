@@ -1,4 +1,4 @@
-import type { PayloadRequest, TaskType, Where } from 'payload'
+import type { PayloadRequest, TaskSlug, Where } from 'payload'
 
 import { fail } from '@/server/options/fail.js'
 import { JOBS_SLUG, TASK_SLUG } from '@/shared/constants.js'
@@ -26,12 +26,14 @@ const findJob = async (req: PayloadRequest, where: Where[]): Promise<PendingJob 
   return docs[0] as PendingJob | undefined
 }
 
-const running: Where = { processing: { equals: true } }
+const running = (): Where => ({ processingUntil: { greater_than: new Date().toISOString() } })
 
-const waiting: Where = { processing: { equals: false } }
+const waiting = (): Where => ({
+  or: [{ processingUntil: { exists: false } }, { processingUntil: { less_than_equal: new Date().toISOString() } }],
+})
 
 export const jobState = async (req: PayloadRequest): Promise<SitemapStatus['state']> => {
-  if (await findJob(req, [running])) return 'running'
+  if (await findJob(req, [running()])) return 'running'
   return (await findJob(req, [])) ? 'queued' : 'idle'
 }
 
@@ -41,7 +43,7 @@ export const queueRegeneration = async (
   delay: number,
 ): Promise<number | string> => {
   if (!options.jobs) return fail('jobs is false, call generateSitemap(req)')
-  const job = await findJob(req, [waiting, { queue: { equals: options.jobs.queue } }])
+  const job = await findJob(req, [waiting(), { queue: { equals: options.jobs.queue } }])
   const waitUntil = new Date(Date.now() + delay)
 
   if (job) {
@@ -63,7 +65,7 @@ export const queueRegeneration = async (
     overrideAccess: true,
     queue: options.jobs.queue,
     req,
-    task: TASK_SLUG as TaskType,
+    task: TASK_SLUG as TaskSlug,
     ...(delay > 0 ? { waitUntil } : {}),
   })
   return queued.id

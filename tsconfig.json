@@ -8,5 +8,5 @@
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./tests/**/*.ts", "./*.config.ts"],
-  "exclude": ["./tests/app/**/*"]
+  "exclude": ["./tests/app/**/*", "./tests/tanstack/**/*"]
 }

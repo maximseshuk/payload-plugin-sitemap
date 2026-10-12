@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarIcon, CopyIcon, LinkIcon, XIcon } from '@payloadcms/ui'
+import { CircledXIcon, ClockIcon, DocumentIcon, LinkIcon } from '@payloadcms/ui'
 import React, { useEffect, useState } from 'react'
 
 import type { SitemapStatus } from '@/shared/types/index.js'
@@ -36,17 +36,12 @@ export const SitemapStats: React.FC<Props> = ({ status, widget }) => {
           value: number(status.urls ?? 0),
         },
         {
-          icon: <CopyIcon />,
+          icon: <DocumentIcon />,
           key: 'files',
           label: count('fileCount', status.files ?? 0),
           value: number(status.files ?? 0),
         },
-        {
-          icon: <CalendarIcon />,
-          key: 'generatedAt',
-          label: translate('generatedAt'),
-          value: when(status.generatedAt),
-        },
+        { icon: <ClockIcon />, key: 'generatedAt', label: translate('generatedAt'), value: when(status.generatedAt) },
       ]
     : []
   if (!widget) {
@@ -67,7 +62,7 @@ export const SitemapStats: React.FC<Props> = ({ status, widget }) => {
     ? [
         ...stats.slice(0, 2),
         {
-          icon: <XIcon />,
+          icon: <CircledXIcon size={24} />,
           key: 'failed',
           label: <span title={status.error}>{translate('failed', { error: status.error })}</span>,
           value: status.errorAt ? when(status.errorAt) : translate('failedShort'),

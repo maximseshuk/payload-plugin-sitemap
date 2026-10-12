@@ -16,3 +16,4 @@ tests/CLAUDE.md
 tests/media
 tests/node_modules
 tests/playwright
+tests/tanstack/routeTree.gen.ts

@@ -5,7 +5,7 @@ import { acquireLock } from '@/server/lock/runLock.js'
 
 vi.mock('payload', async (importOriginal) => ({
   ...(await importOriginal<typeof import('payload')>()),
-  createLocalReq: async (_: unknown, payload: unknown) => ({ payload }),
+  createPayloadRequest: async ({ payload }: { payload: unknown }) => ({ payload }),
 }))
 
 afterEach(() => {

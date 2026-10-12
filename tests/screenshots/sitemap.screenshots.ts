@@ -108,7 +108,11 @@ test.describe('screenshots', () => {
       .toBe(true)
     const layout = await request.post('/api/payload-preferences/dashboard-layout', {
       headers,
-      data: { value: { layouts: [{ id: 'sitemap-1', width: 'full' }] } },
+      data: {
+        value: {
+          layouts: [{ data: {}, id: 'sitemap-1', maxWidth: 'full', minWidth: 'medium', width: 'full' }],
+        },
+      },
     })
     expect(layout.ok()).toBe(true)
   })

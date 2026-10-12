@@ -58,7 +58,7 @@ export const readFile = async (
 
   const config = req.payload.collections[options.storage.collection]!.config
   const upload = config.upload || undefined
-  const params = { collection: config.slug, filename: file.filename, prefix: file.prefix }
+  const params = { collection: config.slug, filename: file.filename, operation: 'read' as const, prefix: file.prefix }
   const handlerReq = withoutConditions(req)
   for (const handler of upload?.handlers ?? []) {
     const response: unknown = await handler(handlerReq, { doc: file.doc, headers: new Headers(), params })

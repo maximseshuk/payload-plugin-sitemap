@@ -1,5 +1,5 @@
 import type { PayloadRequest, Where } from 'payload'
-import { createLocalReq } from 'payload'
+import { createPayloadRequest } from 'payload'
 
 import { selectWithPaths, sitemapFieldPaths } from '@/server/fields/sitemapFieldPaths.js'
 import type {
@@ -37,7 +37,7 @@ export async function* collectionEntries(
   const { overrideAccess } = collection.query
   const readReq = overrideAccess
     ? req
-    : await createLocalReq({ context: req.context, req: { transactionID: req.transactionID } }, payload)
+    : await createPayloadRequest({ context: req.context, payload, req: { transactionID: req.transactionID } })
   const config = payload.collections[slug]!.config
   const drafts = Boolean(config.versions?.drafts)
   const paths = sitemapFieldPaths(config.fields)

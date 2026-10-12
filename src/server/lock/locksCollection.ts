@@ -11,6 +11,7 @@ export const locksCollection = (): CollectionConfig => ({
     update: () => false,
   },
   admin: { hidden: true },
+  authorship: false,
   fields: [
     { name: 'key', type: 'text', index: true, required: true, unique: true },
     { name: 'expiresAt', type: 'date' },

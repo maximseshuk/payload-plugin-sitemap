@@ -11,6 +11,7 @@ export const statusGlobal = (options: ResolvedOptions): GlobalConfig => ({
     update: () => false,
   },
   admin: { hidden: true },
+  authorship: false,
   fields: [
     { name: 'generatedAt', type: 'date' },
     { name: 'urls', type: 'number' },

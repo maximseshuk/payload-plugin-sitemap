@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 import { expect } from 'vitest'
 
-const HASHED = /\.[\da-f]{12}\.xml$/
+const HASHED = /\.[\da-f]{12}(?:-original)?\.xml$/
 
 export const publicName = (stored: string): string => stored.replace(HASHED, '.xml')
 

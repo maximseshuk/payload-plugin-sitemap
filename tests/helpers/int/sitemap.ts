@@ -1,5 +1,5 @@
-import type { Payload, PayloadRequest, Plugin, Where } from 'payload'
-import { createLocalReq, handleEndpoints } from 'payload'
+import type { Payload, Plugin, Where } from 'payload'
+import { createPayloadRequest, handleEndpoints } from 'payload'
 import { vi } from 'vitest'
 
 import type { SitemapFile, SitemapPluginOptions, SitemapSource } from '@/index.js'
@@ -100,7 +100,7 @@ export const seed = async (payload: Payload) => {
   }
 }
 
-export const reqOf = (payload: Payload) => createLocalReq({}, payload) as Promise<PayloadRequest>
+export const reqOf = (payload: Payload) => createPayloadRequest({ payload })
 
 export const publishedRead: Plugin = (config) => ({
   ...config,
@@ -143,10 +143,7 @@ const userOf = async (payload: Payload, email: string) =>
     .docs[0] ?? payload.create({ collection: 'users', data: { email, password: 'secret' }, overrideAccess: true })
 
 export const userReq = async (payload: Payload, email = 'dev@example.com') =>
-  createLocalReq(
-    { user: { ...(await userOf(payload, email)), collection: 'users' } },
-    payload,
-  ) as Promise<PayloadRequest>
+  createPayloadRequest({ payload, user: { ...(await userOf(payload, email)), collection: 'users' } })
 
 export const login = async (payload: Payload) => {
   await userOf(payload, 'dev@example.com')

@@ -7,11 +7,11 @@ widget. `CLAUDE.md` symlink here.
 
 ## Environment
 
-- pnpm. This branch `0.x`: Payload 3.83+, Node 22+. `main`: Payload 4, Node 24.15+.
+- pnpm. Node 24.15+. Payload 4 (`main`); `0.x` Payload 3.83+, Node 22+.
 - No secrets, no `.env`. Tests run on in-memory DBs.
 - Shared config from `@seshuk/payload-plugin-tooling` (oxlint, oxfmt, tsconfig, tsdown `pluginBuild()`,
   `vitestBase`, `testDatabase()`, `insertField`/`findFieldPaths` from `./fields` (bundled into `dist/_tooling`), CI and
-  release workflows), same as `main`. CI runs Node 22 and 24.
+  release workflows), same as `0.x`. CI runs Node 24.
 
 ## Commands
 
@@ -24,6 +24,7 @@ pnpm test:unit     # tests/unit, no DB
 pnpm test:int      # tests/integration on SQLite; TEST_DB=postgres|mongodb
 pnpm test:stress   # full-size stress run, manual, minutes
 pnpm dev           # dev app tests/, port 3104, dev@payloadcms.com / test
+pnpm dev:tanstack  # same app on TanStack Start (tests/tanstack/), port 3104
 ```
 
 Gate: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit && pnpm test:int && pnpm build && npm pack --dry-run`.
@@ -57,6 +58,7 @@ tests/
 ├── integration/    # *.int.spec.ts per feature
 ├── helpers/        # int/ (boot, files, fakeS3, sitemap: shared int fixtures), unit/ (shared unit fixtures)
 ├── vitest.config.ts
+├── tanstack/       # same dev app on TanStack Start (vite.config.ts, router.tsx, app/)
 └── payload.config.ts, collections.ts, seed.ts, app/   # dev app
 ```
 
@@ -84,7 +86,7 @@ registry -> status.run -> publish -> endpoints`
   nothing on MongoDB). Keep docs whose own-locale status is `published` (string or per-locale object; missing locale:
   not published), no fallback. Same map filter hreflang docs. Cursor and stop on raw page. User `where` on `_status`
   still applied.
-- **Public only.** Collection reads use fresh anonymous req (`createLocalReq` without user) and
+- **Public only.** Collection reads use fresh anonymous req (`createPayloadRequest` without user) and
   `overrideAccess: false`. Collection `read` access decide what public. `query.overrideAccess: true` opt-out.
 - **siteUrl once per run.** `siteUrl` fn (`{ locale, req, tenant }`, may be async) resolved per tenant and locale
   at run start (`generateSitemap`), then sync `site(locale)` passed down.
@@ -103,9 +105,8 @@ registry -> status.run -> publish -> endpoints`
   (custom `upload` keep `/`), never overwritten. Same hash as live doc: no upload, doc kept.
 - **Debounce through jobs.** Hook find pending `sitemap-generate` job not running: found, nothing; else queue with
   `waitUntil = now + delay`. Manual trigger pull job to now. Hook catch every error: save never fail. Never-published
-  draft: no run. Task `retries: { attempts: 5, backoff: exponential 30 s }` always (6 attempts, about 15 min), so busy
-  job wait for lock. Task `concurrency` exclusive only with `jobs.enableConcurrencyControl` (Payload 3 throws
-  otherwise).
+  draft: no run. Task `concurrency` exclusive, `retries: { attempts: 5, backoff: exponential 30 s }` (6 attempts, about
+  15 min), so busy job wait for lock.
 - **`jobs: false`.** No task, hooks, schedule (no `payload-jobs` unless user has tasks). `POST /sitemap/generate` run
   in request: 200 `{ files, urls }`, 409 lock busy, 500 `{ message }`. `queueSitemap` throw. Status state from lock.
 - **Lock.** Every run (job, endpoint, direct `generateSitemap`) take `sitemap-locks` doc `key: 'run'` (unique), random
@@ -147,9 +148,9 @@ registry -> status.run -> publish -> endpoints`
 - **`enabled: false`.** Schema stay (files and locks collections, status global, fields, task when jobs on). Task
   handler no-op, no schedule. No hooks, no endpoints, no view, no widget, no telemetry.
 - **Admin.** `admin.view`: page `/admin/sitemap` (`admin.components.views.sitemap`) and `afterNavLinks` link. Custom
-  view gets no template and no admin access check from Payload: view render `DefaultTemplate`
-  (`@payloadcms/next/templates`) itself and check `admin.access`, else `NotFoundPage` (`@payloadcms/next/views`). Nav
-  link check access server side. Widget: status summary, link to page when view on, no file list.
+  view gets no template and no admin access check from Payload: view render `DefaultTemplate` (`@payloadcms/ui/rsc`)
+  itself and check `admin.access`, else not found. Nav link check access server side. Widget: status summary, link to
+  page when view on, no file list.
 - **Telemetry.** Opt-out, `reportTelemetry` from tooling `./telemetry` (bundled into `dist/_tooling`). Sent from
   `onInit` after user `onInit`, never awaited. `features` booleans from options only: never URLs, hosts, slugs,
   names. Off: `enabled: false`, `telemetry: false`, `SITEMAP_TELEMETRY_DISABLED`, `DO_NOT_TRACK`, CI, `NODE_ENV=test`.

@@ -39,7 +39,7 @@ describe('readFile', () => {
     expect(handler).toHaveBeenCalledWith(expect.objectContaining({ payload: req.payload }), {
       doc,
       headers: expect.any(Headers),
-      params: { collection: 'files', filename: 'posts-1.abc.xml', prefix: 'seo' },
+      params: { collection: 'files', filename: 'posts-1.abc.xml', operation: 'read', prefix: 'seo' },
     })
   })
 
