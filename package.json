@@ -113,8 +113,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.9",
-    "@electric-sql/pglite-socket": "0.2.12",
+    "@electric-sql/pglite": "0.5.10",
+    "@electric-sql/pglite-socket": "0.2.13",
     "@payloadcms/db-mongodb": "4.0.0-beta.1",
     "@payloadcms/db-postgres": "4.0.0-beta.1",
     "@payloadcms/db-sqlite": "4.0.0-beta.1",
