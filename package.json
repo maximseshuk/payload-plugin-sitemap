@@ -113,8 +113,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.9",
-    "@electric-sql/pglite-socket": "0.2.12",
+    "@electric-sql/pglite": "0.5.10",
+    "@electric-sql/pglite-socket": "0.2.13",
     "@payloadcms/db-mongodb": "4.0.0-beta.4",
     "@payloadcms/db-postgres": "4.0.0-beta.4",
     "@payloadcms/db-sqlite": "4.0.0-beta.4",
@@ -138,7 +138,7 @@
     "cross-env": "^10.1.0",
     "mongodb-memory-server": "^11.3.0",
     "next": "16.4.2",
-    "oxfmt": "^0.73.0",
+    "oxfmt": "^0.74.0",
     "oxlint": "^1.88.0",
     "payload": "4.0.0-beta.4",
     "react": "catalog:",
