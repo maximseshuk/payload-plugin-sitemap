@@ -50,10 +50,10 @@ The dashboard widget:
 
 ### Versions
 
-| Plugin | Payload | Node.js | Install                               |
-| ------ | ------- | ------- | ------------------------------------- |
-| 1.x    | 4       | 24.15+  | `@seshuk/payload-plugin-sitemap@beta` |
-| 0.x    | 3       | 22+     | `@seshuk/payload-plugin-sitemap@0`    |
+| Plugin | Payload | Node.js  | Install                               |
+| ------ | ------- | -------- | ------------------------------------- |
+| 1.x    | 4       | 24.22.1+ | `@seshuk/payload-plugin-sitemap@beta` |
+| 0.x    | 3       | 22+      | `@seshuk/payload-plugin-sitemap@0`    |
 
 - 1.x is in beta under the `beta` npm tag while Payload 4 is in beta.
 - 1.x works with both Payload 4 frameworks: Next.js (`@payloadcms/next`) and TanStack Start (`@payloadcms/tanstack-start`).

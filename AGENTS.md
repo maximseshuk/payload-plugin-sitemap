@@ -7,7 +7,7 @@ widget. `CLAUDE.md` symlink here.
 
 ## Environment
 
-- pnpm. Node 24.15+. Payload 4 (`main`); `0.x` Payload 3.83+, Node 22+.
+- pnpm. Node 24.22.1+. Payload 4 (`main`); `0.x` Payload 3.83+, Node 22+.
 - No secrets, no `.env`. Tests run on in-memory DBs.
 - Shared config from `@seshuk/payload-plugin-tooling` (oxlint, oxfmt, tsconfig, tsdown `pluginBuild()`,
   `vitestBase`, `testDatabase()`, `insertField`/`findFieldPaths` from `./fields` (bundled into `dist/_tooling`), CI and
@@ -185,10 +185,10 @@ registry -> status.run -> publish -> endpoints`
 
 ## Branches
 
-| Branch | Version | Payload | Node   | npm tag                       |
-| ------ | ------- | ------- | ------ | ----------------------------- |
-| `main` | 1.x     | 4       | 24.15+ | `beta` now, `latest` at 1.0.0 |
-| `0.x`  | 0.x     | 3.83+   | 22+    | `latest` now, `latest-0` then |
+| Branch | Version | Payload | Node     | npm tag                       |
+| ------ | ------- | ------- | -------- | ----------------------------- |
+| `main` | 1.x     | 4       | 24.22.1+ | `beta` now, `latest` at 1.0.0 |
+| `0.x`  | 0.x     | 3.83+   | 22+      | `latest` now, `latest-0` then |
 
 New work on `main`. `0.x` same features, diff only what Payload 3 need.
 
