@@ -7,7 +7,12 @@ import React from 'react'
 import { PLUGIN_NAME, VIEW_PATH } from '@/shared/constants.js'
 import type { ResolvedOptions } from '@/shared/types/index.js'
 
-export const SitemapNavLink = async ({ i18n, params, payload, user }: ServerProps) => {
+export const SitemapNavLink = async ({
+  i18n,
+  params,
+  payload,
+  user,
+}: ServerProps): Promise<React.JSX.Element | null> => {
   const options = payload.config.custom?.[PLUGIN_NAME] as ResolvedOptions | undefined
   if (!user || !options || !(await options.admin.access({ req: await createPayloadRequest({ payload, user }) }))) {
     return null

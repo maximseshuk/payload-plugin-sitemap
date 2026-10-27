@@ -65,7 +65,7 @@ const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ['year', Number.POSITIVE_INFINITY],
 ]
 
-export const relative = (value: string, language: string) => {
+export const relative = (value: string, language: string): string => {
   let amount = Math.min(0, (new Date(value).getTime() - Date.now()) / 1000)
   for (const [unit, size] of UNITS) {
     const rounded = Math.round(amount)

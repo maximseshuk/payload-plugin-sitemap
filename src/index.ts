@@ -1,5 +1,5 @@
 import { definePlugin } from 'payload'
-import type { PayloadRequest } from 'payload'
+import type { PayloadRequest, Plugin } from 'payload'
 
 import { adminConfig } from '@/server/admin/adminConfig.js'
 import { adminEndpoints } from '@/server/endpoints/adminEndpoints.js'
@@ -23,7 +23,7 @@ import { PLUGIN_NAME } from '@/shared/constants.js'
 import { mergeTranslations } from '@/shared/translations/index.js'
 import type { ResolvedOptions, SitemapFile, SitemapPluginOptions } from '@/shared/types/index.js'
 
-export const sitemap = definePlugin<SitemapPluginOptions>({
+export const sitemap: (options: SitemapPluginOptions) => Plugin = definePlugin<SitemapPluginOptions>({
   slug: PLUGIN_NAME,
   plugin: ({ config, options: pluginOptions }) => {
     const options = resolveOptions(pluginOptions)

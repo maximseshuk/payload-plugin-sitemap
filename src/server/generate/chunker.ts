@@ -4,7 +4,10 @@ const FRAME_BYTES = Buffer.byteLength(URLSET_OPEN + URLSET_CLOSE)
 
 export type Chunk = { body: Buffer; lastmod?: string; urls: number }
 
-export const chunker = (maxUrls: number, maxBytes: number) => {
+export const chunker = (
+  maxUrls: number,
+  maxBytes: number,
+): { add: (xml: string, entryLastmod?: string) => Chunk | undefined; end: () => Chunk | undefined } => {
   let parts: string[] = []
   let bytes = FRAME_BYTES
   let urls = 0

@@ -7,7 +7,15 @@ import { intlLanguage, relative } from './SitemapPanel.utils.js'
 
 type Translate = (key: string, options?: Record<string, unknown>) => string
 
-export const useFormat = () => {
+export const useFormat = (): {
+  ago: (value: string) => string
+  count: (key: string, value: number) => string
+  date: (value?: null | string) => string | undefined
+  language: string
+  number: (value: number) => string
+  t: Translate
+  translate: (key: string, options?: Record<string, unknown>) => string
+} => {
   const { i18n, t } = useTranslation()
   const language = intlLanguage(i18n.language)
   const translate = (key: string, options?: Record<string, unknown>) =>

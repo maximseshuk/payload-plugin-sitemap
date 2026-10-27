@@ -9,7 +9,13 @@ import { sitemapStatus } from '@/server/status/sitemapStatus.js'
 import { PLUGIN_NAME } from '@/shared/constants.js'
 import type { ResolvedOptions } from '@/shared/types/index.js'
 
-export const SitemapView = async ({ initPageResult, params, searchParams, server, user }: AdminViewServerProps) => {
+export const SitemapView = async ({
+  initPageResult,
+  params,
+  searchParams,
+  server,
+  user,
+}: AdminViewServerProps): Promise<React.JSX.Element> => {
   const { locale, permissions, req, visibleEntities } = initPageResult
   const options = req.payload.config.custom?.[PLUGIN_NAME] as ResolvedOptions | undefined
   if (!options || !(await options.admin.access({ req }))) return server.notFound()
