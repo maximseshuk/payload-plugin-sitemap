@@ -14,7 +14,7 @@ export const sitemapTask = (options: ResolvedOptions, enabled = true): TaskConfi
   },
   label: 'Generate sitemap',
   retries: { attempts: 5, backoff: { type: 'exponential', delay: 30_000 } },
-  ...(enabled && options.jobs && options.jobs.schedule
+  ...(enabled && options.jobs && options.jobs.mode === 'payload' && options.jobs.schedule
     ? { schedule: [{ cron: options.jobs.schedule, queue: options.jobs.queue }] }
     : {}),
 })

@@ -13,6 +13,31 @@ import { param } from './param.js'
 
 const forbidden = () => Response.json({ message: 'Forbidden' }, { status: 403 })
 
+const generateEndpoint = (options: ResolvedOptions): Endpoint => ({
+  custom: { openapi: generateOperation },
+  handler: async (req) => {
+    if (!(await options.admin.access({ req }))) return forbidden()
+    if (options.jobs) {
+      try {
+        const id = await queueRegeneration(req, options, 0)
+        return Response.json(id === undefined ? {} : { id }, { status: 202 })
+      } catch (err) {
+        req.payload.logger.error({ err, msg: 'sitemap: could not queue a run' })
+        return Response.json({ message: 'sitemap: could not queue a run, see the server log' }, { status: 500 })
+      }
+    }
+    try {
+      const files = await runGeneration(req, options)
+      return Response.json({ files: files.length, urls: files.reduce((sum, file) => sum + file.urls, 0) })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return Response.json({ message }, { status: message.endsWith(BUSY) ? 409 : 500 })
+    }
+  },
+  method: 'post',
+  path: '/sitemap/generate',
+})
+
 export const adminEndpoints = (options: ResolvedOptions): Endpoint[] => [
   {
     custom: { openapi: statusOperation },
@@ -49,20 +74,5 @@ export const adminEndpoints = (options: ResolvedOptions): Endpoint[] => [
     method: 'get',
     path: '/sitemap/files',
   },
-  {
-    custom: { openapi: generateOperation },
-    handler: async (req) => {
-      if (!(await options.admin.access({ req }))) return forbidden()
-      if (options.jobs) return Response.json({ id: await queueRegeneration(req, options, 0) }, { status: 202 })
-      try {
-        const files = await runGeneration(req, options)
-        return Response.json({ files: files.length, urls: files.reduce((sum, file) => sum + file.urls, 0) })
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        return Response.json({ message }, { status: message.endsWith(BUSY) ? 409 : 500 })
-      }
-    },
-    method: 'post',
-    path: '/sitemap/generate',
-  },
+  ...(options.endpoints.generate ? [generateEndpoint(options)] : []),
 ]

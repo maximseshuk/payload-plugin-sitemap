@@ -5,7 +5,7 @@ import type { ResolvedOptions } from '@/shared/types/index.js'
 
 export const filesCollection = (options: ResolvedOptions): CollectionConfig => {
   const { fields, ...overrides } = options.storage.overrides
-  const upload = !options.storage.upload
+  const upload = options.storage.enabled && !options.storage.upload
   const defaultFields: Field[] = [
     { name: 'name', type: 'text', admin: { readOnly: true }, index: true, label: label('file') },
     { name: 'kind', type: 'text', admin: { hidden: true }, index: true },

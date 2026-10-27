@@ -142,7 +142,17 @@ export type SitemapCollectionSource<S extends CollectionSlug = CollectionSlug> =
   fields?: boolean | SitemapFieldsOptions
   /** Options passed to `payload.find` when loading documents. */
   query?: SitemapCollectionQuery<S>
+  /** What a failing read does. See `SitemapSourceOnError`. @default 'fail' */
+  onError?: SitemapSourceOnError
 }
+
+/**
+ * `'fail'` fails the run, and the previous files stay online. `'keep'` logs a warning and reuses this source's files
+ * from the last run, per tenant and locale index, and the run goes on. With `'keep'`, a source that has no files from
+ * the last run still fails the run, so a sitemap never silently loses a whole source. Errors outside the source, such
+ * as a storage or lock error, always fail the run.
+ */
+export type SitemapSourceOnError = 'fail' | 'keep'
 
 /** URL lists that do not come from one collection, such as filter pages or external data. */
 export type SitemapCustomSource = {
@@ -158,6 +168,8 @@ export type SitemapCustomSource = {
     siteUrl: string
     tenant?: SitemapTenant
   }) => AsyncIterable<SitemapEntry> | Iterable<SitemapEntry> | Promise<Iterable<SitemapEntry>>
+  /** What a failing `entries` does. See `SitemapSourceOnError`. @default 'fail' */
+  onError?: SitemapSourceOnError
 }
 
 /** Static pages. A `url` can be a path relative to `siteUrl`. */
@@ -167,6 +179,8 @@ export type SitemapStaticSource = {
   name?: string
   /** A list, or a function called once per locale. The same URL from two locales is written once. */
   entries: SitemapStaticEntries
+  /** What a failing `entries` function does. See `SitemapSourceOnError`. @default 'fail' */
+  onError?: SitemapSourceOnError
 }
 
 /** One file group of the sitemap. Files are listed in the index in the order of the sources. */
@@ -289,13 +303,26 @@ export type SitemapRegenerateOptions = {
   globals?: GlobalSlug[]
 }
 
+/**
+ * Queues a run in your own scheduler, such as BullMQ, instead of a Payload job. Called after changes to watched
+ * documents with `regenerate.delay`, and with `delay: 0` for runs started from the Sitemap page,
+ * `POST /api/sitemap/generate` or `queueSitemap(req)`. Your worker then calls `generateSitemap(req)`. Return the id
+ * of the queued job, or nothing. Contract and example: README, "Your own queue".
+ */
+export type SitemapEnqueue = (args: { delay: number; req: PayloadRequest }) => MaybePromise<number | string | void>
+
 export type SitemapJobsOptions = {
   /** Regenerate after changes to listed collections. `false` turns it off. @default { delay: 300000 } */
   regenerate?: false | SitemapRegenerateOptions
-  /** Cron for scheduled runs, for example `0 3 * * *`. Needs a jobs runner that handles schedules. */
+  /** Cron for scheduled runs, for example `0 3 * * *`. Needs a jobs runner that handles schedules. Not with `enqueue`. */
   schedule?: string
-  /** Jobs queue for the task. @default 'default' */
+  /** Payload jobs queue for the task. Not with `enqueue`. @default 'default' */
   queue?: string
+  /**
+   * Hand runs to your own scheduler instead of a Payload job. The plugin then adds no task, so no `payload-jobs`
+   * collection unless you have other tasks. Not with `schedule` or `queue`. See `SitemapEnqueue`.
+   */
+  enqueue?: SitemapEnqueue
 }
 
 export type SitemapAdminOptions = {
@@ -309,6 +336,20 @@ export type SitemapAdminOptions = {
   view?: boolean
   /** Add the Sitemap widget to the dashboard "Add +" list. @default true */
   widget?: boolean
+}
+
+export type SitemapEndpointsOptions = {
+  /**
+   * Add the public `GET /api/sitemap.xml` and `GET /api/sitemaps/:filename+`. Turn it off when the files are served
+   * from somewhere else, such as `publish` to a CDN. `sitemapProxy` needs them.
+   * @default true
+   */
+  files?: boolean
+  /**
+   * Add `POST /api/sitemap/generate`. With `false`, the Sitemap page and widget show no Regenerate button.
+   * @default true
+   */
+  generate?: boolean
 }
 
 /**
@@ -361,13 +402,19 @@ export type SitemapPluginOptions = {
   sources?: SitemapSource[]
   /** How the files are named and written. */
   output?: SitemapOutputOptions
-  /** Where the files are stored. */
-  storage?: SitemapStorageOptions
+  /**
+   * Where the files are stored. `false` stores no file bodies, only the file list with hashes, and needs `publish`:
+   * each run buffers its files in the OS temp folder and, when it succeeded, puts the changed ones. The file
+   * endpoints then redirect to `output.fileUrl`.
+   */
+  storage?: false | SitemapStorageOptions
   /** Also write every file to a stable public place, for example a CDN bucket. Needs `output.fileUrl`. @default none */
   publish?: SitemapPublishOptions
+  /** Which endpoints the plugin adds. The status and files endpoints of the Sitemap page are always added. */
+  endpoints?: SitemapEndpointsOptions
   /**
    * When generation runs. `false` adds no task and no hooks: start runs from the Sitemap page,
-   * `POST /api/sitemap/generate` or `generateSitemap(req)`.
+   * `POST /api/sitemap/generate` or `generateSitemap(req)`. `enqueue` hands runs to your own scheduler.
    * @default { regenerate: { delay: 300000 } }
    */
   jobs?: false | SitemapJobsOptions

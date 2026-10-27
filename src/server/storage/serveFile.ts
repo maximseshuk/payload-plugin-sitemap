@@ -28,6 +28,9 @@ export const serveFile = async (req: PayloadRequest, options: ResolvedOptions, w
   })
   if (!docs[0]) return notFound()
   const file = toStored(docs[0])
+  if (!options.storage.enabled) {
+    return new Response(null, { headers: { 'Cache-Control': CACHE, Location: file.url }, status: 302 })
+  }
 
   const etag = `"${file.hash}"`
   const headers = { 'Cache-Control': CACHE, ETag: etag }

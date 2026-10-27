@@ -14,7 +14,10 @@ export type TelemetryFeatures = {
   collectionSort: boolean
   collectionUrlFunction: boolean
   customSources: boolean
+  endpointsFiles: boolean
+  endpointsGenerate: boolean
   jobs: boolean
+  jobsEnqueue: boolean
   jobsRegenerate: boolean
   jobsRegenerateTriggers: boolean
   jobsSchedule: boolean
@@ -24,7 +27,9 @@ export type TelemetryFeatures = {
   outputSplitLocales: boolean
   publish: boolean
   publishDelete: boolean
+  publishOnly: boolean
   siteUrlFunction: boolean
+  sourceKeepOnError: boolean
   staticSources: boolean
   storageCollection: boolean
   storageDelete: boolean
@@ -56,19 +61,24 @@ export const buildFeatures = ({
     collectionSort: collections.some(({ query }) => query?.sort !== undefined),
     collectionUrlFunction: collections.some(({ url }) => typeof url === 'function'),
     customSources: kinds.has('custom'),
+    endpointsFiles: resolved.endpoints.files,
+    endpointsGenerate: resolved.endpoints.generate,
     jobs: jobs !== false,
+    jobsEnqueue: jobs !== false && jobs.mode === 'enqueue',
     jobsRegenerate: Boolean(regenerate),
     jobsRegenerateTriggers: regenerate ? regenerate.collections.length + regenerate.globals.length > 0 : false,
-    jobsSchedule: Boolean(jobs && jobs.schedule),
+    jobsSchedule: jobs !== false && jobs.mode === 'payload' && Boolean(jobs.schedule),
     outputFilename: Boolean(options.output?.filename),
     outputFileUrl: Boolean(options.output?.fileUrl),
     outputHreflang: resolved.output.hreflang,
     outputSplitLocales: resolved.output.splitLocales,
     publish: Boolean(resolved.publish),
     publishDelete: Boolean(resolved.publish?.delete),
+    publishOnly: !resolved.storage.enabled,
     siteUrlFunction: typeof options.siteUrl === 'function',
+    sourceKeepOnError: resolved.sources.some(({ onError }) => onError === 'keep'),
     staticSources: kinds.has('static'),
-    storageCollection: options.storage?.collection !== undefined,
+    storageCollection: Boolean(options.storage && options.storage.collection !== undefined),
     storageDelete: Boolean(resolved.storage.delete),
     storageUpload: Boolean(resolved.storage.upload),
     tenants: Boolean(resolved.tenants),

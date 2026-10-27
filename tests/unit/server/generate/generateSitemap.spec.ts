@@ -18,7 +18,7 @@ const run = (options: Partial<SitemapPluginOptions>, localization?: Record<strin
     sources: [{ type: 'static', entries: [{ url: '/a' }, { url: '/b' }, { url: '/c' }] }],
     ...options,
   })
-  return { result: generateSitemap(req, resolved, store), store }
+  return { result: generateSitemap(req, resolved, store, async () => undefined), store }
 }
 
 describe('generateSitemap', () => {

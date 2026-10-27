@@ -31,7 +31,10 @@ describe('buildFeatures', () => {
       collectionSort: false,
       collectionUrlFunction: false,
       customSources: false,
+      endpointsFiles: true,
+      endpointsGenerate: true,
       jobs: true,
+      jobsEnqueue: false,
       jobsRegenerate: true,
       jobsRegenerateTriggers: false,
       jobsSchedule: false,
@@ -41,7 +44,9 @@ describe('buildFeatures', () => {
       outputSplitLocales: false,
       publish: false,
       publishDelete: false,
+      publishOnly: false,
       siteUrlFunction: false,
+      sourceKeepOnError: false,
       staticSources: false,
       storageCollection: false,
       storageDelete: false,
@@ -116,6 +121,27 @@ describe('buildFeatures', () => {
       storageUpload: false,
     })
     expect(features({ jobs: false })).toMatchObject({ jobs: false, jobsRegenerate: false, jobsSchedule: false })
+  })
+
+  it('reports enqueue, endpoints, publish only and kept sources', () => {
+    expect(
+      features({
+        endpoints: { files: false, generate: false },
+        jobs: { enqueue: () => 'job' },
+        output: { fileUrl: ({ filename }) => `https://cdn.example.com/${filename}` },
+        publish: { put: async () => {} },
+        sources: [{ type: 'custom', entries: () => [], name: 'filters', onError: 'keep' }],
+        storage: false,
+      }),
+    ).toMatchObject({
+      endpointsFiles: false,
+      endpointsGenerate: false,
+      jobs: true,
+      jobsEnqueue: true,
+      publishOnly: true,
+      sourceKeepOnError: true,
+      storageCollection: false,
+    })
   })
 })
 

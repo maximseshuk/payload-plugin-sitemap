@@ -158,11 +158,12 @@ Every option is checked when Payload starts. An unknown key, a wrong type or a v
 | `siteUrl`   | `string \| ({ locale, req, tenant }) => string` | required | Public site address. A function can give each locale or tenant its own domain. See [Output](#output). |
 | `sources`   | `SitemapSource[]`                               | `[]`     | What the sitemap lists: collections, static pages and custom URL lists. See [Sources](#sources).      |
 | `output`    | `SitemapOutputOptions`                          | `{}`     | File size, file names, file URLs, hreflang and one index per locale. See [Output](#output).           |
-| `storage`   | `SitemapStorageOptions`                         | `{}`     | Where the files are stored. See [Storage](#storage).                                                  |
+| `storage`   | `false \| SitemapStorageOptions`                | `{}`     | Where the files are stored. `false` keeps only the published copy. See [Storage](#storage).           |
 | `publish`   | `SitemapPublishOptions`                         |          | Also write every file to a stable public key. See [Publish](#publish).                                |
 | `tenants`   | `boolean \| SitemapTenantsOptions`              | `false`  | One sitemap per tenant for the multi-tenant plugin. See [Multi-tenant](#multi-tenant).                |
 | `jobs`      | `false \| SitemapJobsOptions`                   | `{}`     | When generation runs. `false` uses no jobs queue. See [Jobs](#jobs).                                  |
 | `admin`     | `SitemapAdminOptions`                           | `{}`     | Sitemap page, widget and who can use them. See [Admin page and widget](#admin-page-and-widget).       |
+| `endpoints` | `{ files?, generate? }`                         | `{}`     | Turn off the file endpoints or the generate endpoint. See [Endpoints](#endpoints).                    |
 | `enabled`   | `boolean`                                       | `true`   | `false` turns the plugin off but keeps its database schema. See below.                                |
 | `telemetry` | `boolean \| { url? }`                           | `true`   | Anonymous usage telemetry. See [Telemetry](#telemetry).                                               |
 
@@ -409,6 +410,22 @@ To vary the entries by locale, pass a function. It is called once per locale, an
 - A relative `url` is joined to `siteUrl`. An entry with a scheme other than http(s) is skipped with a warning.
 - Add the collections the source reads to `jobs.regenerate.collections`, so changes there queue a run too.
 
+#### When a source fails
+
+Every source takes `onError`, `'fail'` by default:
+
+- `'fail'`: an error from the source fails the whole run. The files of the last run stay online.
+- `'keep'`: an error while the source reads its entries keeps that source's files from the last successful run, for the same locale and tenant. The run logs a warning and goes on with the other sources.
+
+```ts
+{ type: 'custom', name: 'feed', onError: 'keep', entries: () => fetchFeed() }
+```
+
+- With `'keep'` and no files from an earlier run, the run fails as with `'fail'`. A sitemap without the source would drop its URLs.
+- Only errors from the source itself are caught: its query, `entries` or `url` function. A storage, publish, lock or plugin check error still fails the run.
+- The kept files are the same documents, so nothing is uploaded or published again for them.
+- With `storage: false`, the plugin has no copy of the kept files. If one of them was never published, for example after a failed `put`, the run fails instead of keeping them, so a published index never lists a file that is not there.
+
 ### Output
 
 | Key              | Type                                                 | Default                           | What it does                                                       |
@@ -626,6 +643,26 @@ storage: {
 }
 ```
 
+#### Publish only (`storage: false`)
+
+With `storage: false`, the plugin keeps no copy of the files. `publish.put` is the only place they go, so `storage: false` without `publish` stops Payload from starting.
+
+- The files collection keeps only the file list: name, hash, URL from `output.fileUrl`, URL count and last change. It has no uploads.
+- A run writes the files to a folder in the OS temp directory and removes the folder when it ends. Only files whose content changed are written there.
+- `put` runs only after the whole run succeeded, for each changed child file first, then for each changed index. A failed run puts nothing.
+- Nothing is deleted unless you pass `publish.delete`.
+- The file endpoints answer `302` to the file's URL from `output.fileUrl`. Turn them off with `endpoints.files: false` when the site serves the files from the bucket itself.
+- `output.fileUrl` must point at the bucket, not at `/sitemaps/` on a site that proxies to these endpoints: that would redirect to itself. `sitemapProxy` answers `502` for such a redirect.
+
+```ts
+sitemap({
+  // ...
+  storage: false,
+  output: { fileUrl: ({ filename }) => `https://cdn.example.com/sitemaps/${filename}` },
+  publish: { put: ({ body, contentType, filename }) => bucket.put(`sitemaps/${filename}`, body, { contentType }) },
+})
+```
+
 ### Publish
 
 `storage` keeps hashed versions that only the endpoints know. To put the files at stable public keys, add `publish` and point `output.fileUrl` at the same place. For example, `https://cdn.example.com/sitemaps/posts-1.xml` on a CDN:
@@ -666,7 +703,8 @@ sitemap({
 | ------------ | ------------------------------------------ | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | `regenerate` | `false \| { delay, collections, globals }` | `{ delay: 300000 }` | Queue a run after changes. `collections` and `globals` add more triggers, for data your sources read. |
 | `schedule`   | `string`                                   |                     | Cron for scheduled runs, for example `0 3 * * *`. Your job runner must handle schedules.              |
-| `queue`      | `string`                                   | `'default'`         | Jobs queue for the task.                                                                              |
+| `queue`      | `string`                                   | `'default'`         | Payload jobs queue for the task.                                                                      |
+| `enqueue`    | `({ delay, req }) => id \| void`           |                     | Hand runs to your own queue instead of Payload jobs. See [Your own queue](#your-own-queue).           |
 
 #### Run lock
 
@@ -698,6 +736,84 @@ The run has to finish within one request, so check your platform's limits:
 
 On serverless hosts, prefer the jobs queue for large sites.
 
+#### Your own queue
+
+Pass `jobs.enqueue` when your host runs background work on another queue, such as BullMQ. The plugin then adds no Payload task, so no `payload-jobs` collection unless something else needs it. It calls `enqueue` instead of queueing a job:
+
+- after changes to watched documents, with `delay` set to `jobs.regenerate.delay`;
+- with `delay: 0` from **Regenerate**, `POST /api/sitemap/generate` and `queueSitemap(req)`.
+
+Your worker calls `generateSitemap(req)`. `enqueue` returns the id of the queued job, or nothing. `jobs.schedule` and `jobs.queue` do not work with `enqueue`: schedule the job in your own queue.
+
+`enqueue` must keep this contract:
+
+- Calls never stack. While a run waits, another call adds nothing.
+- A call with a smaller `delay` moves the waiting run earlier.
+- A call while a run is active causes exactly one follow-up run, so changes made during the run are not lost.
+- A follow-up that starts while the other run still holds the [run lock](#run-lock) fails with `a sitemap run is already in progress`. Retry it with backoff.
+
+The plugin cannot roll back your queue. The hooks run inside the save's transaction, and `enqueue` is not undone when that transaction fails. If your queue must see committed data only, enqueue after the commit inside `enqueue`.
+
+The Sitemap page shows `running` while a run holds the lock. After an `enqueue` call, it shows `queued` until a run starts, for up to the delay plus 15 minutes. The plugin keeps this state in a row of the hidden `sitemap-locks` collection and writes it outside the save's transaction, so a failed write is logged and never undoes the save. It needs no schema change. If `enqueue` throws, a save still succeeds and the error is logged. `POST /api/sitemap/generate` then answers `500`.
+
+```ts
+import config from '@payload-config'
+import { generateSitemap, sitemap } from '@seshuk/payload-plugin-sitemap'
+import { Queue, Worker } from 'bullmq'
+import { createPayloadRequest, getPayload } from 'payload'
+
+const connection = { host: 'localhost', port: 6379 }
+const sitemapQueue = new Queue('sitemap', { connection })
+const jobIds = ['sitemap-1', 'sitemap-2']
+
+sitemap({
+  siteUrl: 'https://example.com',
+  jobs: {
+    enqueue: async ({ delay }) => {
+      let free: string | undefined
+      for (const jobId of jobIds) {
+        const job = await sitemapQueue.getJob(jobId)
+        const state = job ? await job.getState() : 'missing'
+        if (job && state === 'delayed') {
+          if (delay === 0) await job.promote()
+          return jobId
+        }
+        if (state === 'waiting' || state === 'prioritized') return jobId
+        if (state !== 'active') free ??= jobId
+      }
+      if (!free) return
+      await sitemapQueue.add(
+        'generate',
+        {},
+        {
+          attempts: 6,
+          backoff: { type: 'exponential', delay: 30_000 },
+          delay,
+          jobId: free,
+          removeOnComplete: true,
+          removeOnFail: true,
+        },
+      )
+      return free
+    },
+  },
+})
+
+new Worker(
+  'sitemap',
+  async () => {
+    const payload = await getPayload({ config })
+    await generateSitemap(await createPayloadRequest({ payload }))
+  },
+  { connection },
+)
+```
+
+- `sitemap()` goes into `plugins` of your config; the worker runs in a separate process that loads the same config.
+- Two job ids let one job wait while the other is active: that waiting job is the follow-up.
+- A delayed job moves to now on a `delay: 0` call. Change events all use `jobs.regenerate.delay`, so a waiting job is never later than a new change. If you also call `queueSitemap(req, delay)` with other delays, use `job.changeDelay` for a smaller one.
+- The follow-up retries 5 times, 30 seconds to 8 minutes apart, like the Payload task.
+
 ### Admin page and widget
 
 | Key      | Type                   | Default               | What it does                                                                          |
@@ -717,7 +833,7 @@ On serverless hosts, prefer the jobs queue for large sites.
 
 - Open it from the **Sitemap** link in the nav.
 - A label next to the title shows a queued, running or failed run.
-- The page shows the URL and file counts, how long ago the sitemap was generated (the full date on hover), and a **Regenerate** button.
+- The page shows the URL and file counts, how long ago the sitemap was generated (the full date on hover), and a **Regenerate** button. With `endpoints.generate: false`, there is no button.
 - When the last run failed, a red block shows its error and time. The previous files stay online.
 
 The file table works like a Payload collection list:
@@ -739,13 +855,22 @@ Before the first run, the page and the widget show "Not generated yet" and a **G
 
 ### Endpoints
 
-| Method | Path                       | Access   | What it does                                                                                                 |
-| ------ | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
-| GET    | `/api/sitemap.xml`         | public   | The sitemap index. Takes `?locale=` with `output.splitLocales` and `?tenant=` with `tenants`.                |
-| GET    | `/api/sitemaps/:filename+` | public   | A child sitemap, by its name with folders. With `?tenant=`, files of other tenants return 404.               |
-| GET    | `/api/sitemap/status`      | `access` | Last run, error, URL and file counts, and run state.                                                         |
-| GET    | `/api/sitemap/files`       | `access` | Live files, index files first. See the query parameters below.                                               |
-| POST   | `/api/sitemap/generate`    | `access` | Start a run. With jobs, `202 { id }`. With `jobs: false`, see [Without Payload jobs](#without-payload-jobs). |
+| Method | Path                       | Access   | What it does                                                                                                                                                                                                    |
+| ------ | -------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/sitemap.xml`         | public   | The sitemap index. Takes `?locale=` with `output.splitLocales` and `?tenant=` with `tenants`.                                                                                                                   |
+| GET    | `/api/sitemaps/:filename+` | public   | A child sitemap, by its name with folders. With `?tenant=`, files of other tenants return 404.                                                                                                                  |
+| GET    | `/api/sitemap/status`      | `access` | Last run, error, URL and file counts, and run state.                                                                                                                                                            |
+| GET    | `/api/sitemap/files`       | `access` | Live files, index files first. See the query parameters below.                                                                                                                                                  |
+| POST   | `/api/sitemap/generate`    | `access` | Start a run. With jobs, `202 { id }`. With [`jobs.enqueue`](#your-own-queue), `202 { id }` or `202 {}`, and `500` when `enqueue` throws. With `jobs: false`, see [Without Payload jobs](#without-payload-jobs). |
+
+Turn endpoints off with `endpoints`:
+
+| Key        | Type      | Default | What it does                                                                                                      |
+| ---------- | --------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `files`    | `boolean` | `true`  | `false` drops `/api/sitemap.xml` and `/api/sitemaps/*`, when the site serves the published files itself.          |
+| `generate` | `boolean` | `true`  | `false` drops `POST /api/sitemap/generate` and hides the **Regenerate** button. Runs then come from jobs or code. |
+
+[`sitemapProxy`](#serve-on-your-site-domain) reads the file endpoints, so keep `files` on when you use it. It passes a redirect from them, such as the `302` of `storage: false`, through to the client.
 
 `GET /api/sitemap/files` takes:
 
@@ -756,7 +881,7 @@ Before the first run, the page and the widget show "Not generated yet" and a **G
 
 #### Caching and errors
 
-- The file endpoints send the XML with `Cache-Control: public, max-age=300` and an `ETag` from the content hash.
+- The file endpoints send the XML with `Cache-Control: public, max-age=300` and an `ETag` from the content hash. With `storage: false`, they answer `302` to the published URL instead.
 - A request with a matching `If-None-Match` gets `304` without a body.
 - When the storage fails, or a storage URL does not answer in 30 seconds, the endpoint logs the error and answers `502`.
 
@@ -924,10 +1049,10 @@ Two functions start a run from your own code: a hook, an endpoint, a cron or a s
 import { generateSitemap, queueSitemap } from '@seshuk/payload-plugin-sitemap'
 ```
 
-| Function                    | What it does                                                                         | Use it when                       |
-| --------------------------- | ------------------------------------------------------------------------------------ | --------------------------------- |
-| `queueSitemap(req, delay?)` | Puts a run into the jobs queue and returns the job id. The job runner does the work. | You use the jobs queue (default). |
-| `generateSitemap(req)`      | Runs the whole generation now, in this process, and returns the written files.       | `jobs: false`, scripts and tests. |
+| Function                    | What it does                                                                         | Use it when                                         |
+| --------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| `queueSitemap(req, delay?)` | Puts a run into the jobs queue and returns the job id. The job runner does the work. | You use the jobs queue (default) or `jobs.enqueue`. |
+| `generateSitemap(req)`      | Runs the whole generation now, in this process, and returns the written files.       | `jobs: false`, scripts and tests.                   |
 
 ```ts
 // After a bulk import: run in one minute
@@ -941,6 +1066,7 @@ const files = await generateSitemap(req)
 
 - `delay` is in milliseconds, 0 by default: the job runs on the next pass of the job runner.
 - If a sitemap job is already waiting, no new job is added. The waiting job moves earlier when the new `delay` ends sooner.
+- With `jobs.enqueue`, it calls `enqueue` with `delay` and returns its id, or `undefined` when `enqueue` returns none. In that case, type the result: `queueSitemap<string | undefined>(req)`. An `enqueue` error is thrown.
 - With `jobs: false`, it throws. Call `generateSitemap` instead.
 
 **`generateSitemap`**
@@ -1013,15 +1139,20 @@ The plugin never sends secrets, IP addresses, keys, file names, URLs or collecti
 | `storageCollection`      | `storage.collection` is set                          |
 | `storageUpload`          | Files are stored through `storage.upload`            |
 | `storageDelete`          | `storage.delete` is set                              |
+| `publishOnly`            | `storage: false`                                     |
 | `publish`                | `publish` is set                                     |
 | `publishDelete`          | `publish.delete` is set                              |
 | `jobs`                   | Runs go through the jobs queue                       |
+| `jobsEnqueue`            | `jobs.enqueue` hands runs to your own queue          |
 | `jobsRegenerate`         | Changes queue a run                                  |
 | `jobsRegenerateTriggers` | `jobs.regenerate` lists extra collections or globals |
 | `jobsSchedule`           | `jobs.schedule` is set                               |
 | `adminAccess`            | `admin.access` replaces the default check            |
 | `adminView`              | The Sitemap page and nav link are on                 |
 | `adminWidget`            | The dashboard widget is on                           |
+| `endpointsFiles`         | The file endpoints are on                            |
+| `endpointsGenerate`      | The generate endpoint is on                          |
+| `sourceKeepOnError`      | A source sets `onError: 'keep'`                      |
 | `tenants`                | `tenants` is on                                      |
 
 ### Turning it off

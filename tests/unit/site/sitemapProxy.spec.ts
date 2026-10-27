@@ -49,6 +49,21 @@ describe('sitemapProxy', () => {
     expect(await response.text()).toBe('')
   })
 
+  it('passes a redirect through and answers 502 for a redirect back to the same path', async () => {
+    const fetch = vi.fn<(input: URL, init?: RequestInit) => Promise<Response>>(async (input) =>
+      String(input).endsWith('loop.xml')
+        ? new Response(null, { headers: { Location: 'https://example.com/sitemaps/loop.xml' }, status: 302 })
+        : new Response(null, { headers: { Location: 'https://cdn.example.com/sitemaps/a.xml' }, status: 302 }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    const proxy = sitemapProxy({ serverUrl: 'https://cms.example.com' })
+    const response = await proxy(new Request('https://example.com/sitemaps/a.xml'))
+    expect(fetch.mock.calls[0]![1]?.redirect).toBe('manual')
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toBe('https://cdn.example.com/sitemaps/a.xml')
+    expect((await proxy(new Request('https://example.com/sitemaps/loop.xml'))).status).toBe(502)
+  })
+
   it('answers 502 when the API is unreachable', async () => {
     vi.stubGlobal(
       'fetch',

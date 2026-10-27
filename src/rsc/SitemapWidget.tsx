@@ -12,6 +12,7 @@ export const SitemapWidget = async ({ req }: WidgetServerProps): Promise<React.J
   if (!options || !(await options.admin.access({ req }))) return null
   return (
     <SitemapPanel
+      generate={options.endpoints.generate}
       href={
         options.admin.view
           ? formatAdminURL({ adminRoute: req.payload.config.routes.admin, path: VIEW_PATH })

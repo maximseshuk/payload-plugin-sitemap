@@ -52,8 +52,11 @@ describe('defaults', () => {
     })
     expect(options.output).toMatchObject({ hreflang: true, maxUrls: 50_000, splitLocales: false })
     expect(options.output.fileUrl({ filename: 'posts-1.xml', siteUrl: SITE })).toBe(`${SITE}/sitemaps/posts-1.xml`)
-    expect(options.storage).toEqual({ collection: 'sitemap-files', overrides: {}, upload: undefined })
+    expect(options.storage).toEqual({ collection: 'sitemap-files', enabled: true, overrides: {}, upload: undefined })
+    expect(options.endpoints).toEqual({ files: true, generate: true })
+    expect(options.sources[0]).toMatchObject({ onError: 'fail' })
     expect(options.jobs).toEqual({
+      mode: 'payload',
       queue: 'default',
       regenerate: { collections: [], delay: 300_000, globals: [] },
       schedule: undefined,
@@ -101,6 +104,7 @@ describe('defaults', () => {
     const put = async () => {}
     const options = resolve({
       admin: { access, view: false, widget: false },
+      endpoints: { files: false, generate: false },
       jobs: {
         queue: 'seo',
         regenerate: { collections: ['pages'], delay: 5, globals: ['settings'] },
@@ -117,7 +121,9 @@ describe('defaults', () => {
       storage: { collection: { admin: { hidden: false } }, delete: remove, upload },
     })
     expect(options.admin).toEqual({ access, view: false, widget: false })
+    expect(options.endpoints).toEqual({ files: false, generate: false })
     expect(options.jobs).toEqual({
+      mode: 'payload',
       queue: 'seo',
       regenerate: { collections: ['pages'], delay: 5, globals: ['settings'] },
       schedule: '0 3 * * *',
@@ -128,11 +134,26 @@ describe('defaults', () => {
     expect(options.storage).toEqual({
       collection: 'sitemap-files',
       delete: remove,
+      enabled: true,
       overrides: { admin: { hidden: false } },
       upload,
     })
     expect(resolve({ jobs: { regenerate: false } }).jobs).toMatchObject({ regenerate: false })
     expect(resolve({ jobs: false }).jobs).toBe(false)
+    const enqueue = () => 'job'
+    expect(resolve({ jobs: { enqueue } }).jobs).toEqual({
+      enqueue,
+      mode: 'enqueue',
+      regenerate: { collections: [], delay: 300_000, globals: [] },
+    })
+    expect(
+      resolve({ output: { fileUrl: () => 'https://cdn.example.com/a.xml' }, publish: { put }, storage: false }).storage,
+    ).toEqual({
+      collection: 'sitemap-files',
+      enabled: false,
+      overrides: {},
+    })
+    expect(resolve({ sources: [posts({ onError: 'keep' })] }).sources[0]).toMatchObject({ onError: 'keep' })
   })
 
   it('keeps the order of the sources and names them', () => {
@@ -319,6 +340,23 @@ describe('validation', () => {
   it('checks jobs, images and locales', () => {
     expect(run({ jobs: { schedule: 5 as never } })).toThrow('jobs.schedule must be a cron string')
     expect(run({ jobs: { queue: 5 as never } })).toThrow('jobs.queue must be a string')
+    expect(run({ jobs: { enqueue: 'bull' as never } })).toThrow('jobs.enqueue must be a function')
+    expect(run({ jobs: { enqueue: () => 'job', schedule: '0 3 * * *' } })).toThrow(
+      'jobs.schedule needs the Payload jobs queue',
+    )
+    expect(run({ jobs: { enqueue: () => 'job', queue: 'seo' } })).toThrow(
+      'jobs.queue names a Payload jobs queue, not used with jobs.enqueue',
+    )
+    expect(run({ endpoints: { files: 'no' as never } })).toThrow('endpoints.files must be true or false')
+    expect(run({ endpoints: { generate: 1 as never } })).toThrow('endpoints.generate must be true or false')
+    expect(run({ endpoints: { serve: true } as never })).toThrow('unknown option "serve" in endpoints')
+    expect(run({ storage: false })).toThrow('storage: false needs publish')
+    expect(run({ sources: [posts({ onError: 'skip' as never })] })).toThrow(
+      'sources[0].onError must be "fail" or "keep"',
+    )
+    expect(run({ sources: [{ type: 'static', entries: [], onError: 'x' as never }] })).toThrow(
+      'sources[0].onError must be "fail" or "keep"',
+    )
     expect(run({ sources: [posts({ images: 'cover' })] })).toThrow('sources[0].images must be an array or a function')
     expect(run({ sources: [posts({ images: [{ field: '' }] })] })).toThrow(
       'sources[0].images[0].field must be a field path',

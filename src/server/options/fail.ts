@@ -1,3 +1,5 @@
+export class SitemapError extends Error {}
+
 export const fail = (message: string): never => {
-  throw new Error(`sitemap: ${message}`)
+  throw new SitemapError(`sitemap: ${message}`)
 }

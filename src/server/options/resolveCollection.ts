@@ -27,6 +27,7 @@ const COLLECTION_KEYS = [
   'images',
   'fields',
   'query',
+  'onError',
 ] as const
 const QUERY_KEYS = ['where', 'depth', 'select', 'overrideAccess', 'sort'] as const
 const SORT = /^-?[^-.\s][^.\s]*$/

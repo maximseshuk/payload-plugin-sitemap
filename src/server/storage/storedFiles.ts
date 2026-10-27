@@ -20,7 +20,7 @@ export type StoredFile = {
 
 type Doc = Record<string, unknown>
 
-const text = (value: unknown): string | undefined => (typeof value === 'string' && value ? value : undefined)
+export const text = (value: unknown): string | undefined => (typeof value === 'string' && value ? value : undefined)
 
 export const toStored = (doc: Doc): StoredFile => ({
   doc: doc as StoredFile['doc'],
