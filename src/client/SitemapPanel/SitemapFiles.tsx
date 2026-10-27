@@ -33,6 +33,7 @@ import { useFormat } from './useFormat.js'
 
 type Props = {
   base: string
+  files: boolean
   initial?: SitemapFilesPage
   status?: SitemapStatus
 }
@@ -71,7 +72,7 @@ const paginated = (
   totalPages,
 })
 
-export const SitemapFiles: React.FC<Props> = ({ base, initial, status }) => {
+export const SitemapFiles: React.FC<Props> = ({ base, files: served, initial, status }) => {
   const { date, language, number, t, translate } = useFormat()
   const [files, setFiles] = useState<SitemapFilesPage | undefined>(initial)
   const [failed, setFailed] = useState(false)
@@ -179,8 +180,8 @@ export const SitemapFiles: React.FC<Props> = ({ base, initial, status }) => {
       column(
         'filename',
         t('upload:fileName'),
-        docs.map(({ filename, kind }) => (
-          <a href={`${base}/sitemaps/${filename}`} key={filename} rel="noreferrer" target="_blank">
+        docs.map(({ filename, kind, url }) => (
+          <a href={served ? `${base}/sitemaps/${filename}` : url} key={filename} rel="noreferrer" target="_blank">
             <span className="sitemap-panel__file-name">{filename}</span>
             {kind === 'index' && (
               <Pill className="sitemap-panel__kind" pillStyle="light-gray" size="small">

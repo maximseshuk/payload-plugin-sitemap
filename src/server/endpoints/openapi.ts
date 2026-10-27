@@ -15,6 +15,10 @@ const fileResponses: OpenAPIV3_1.ResponsesObject = {
       ETag: { description: 'sha256 of the file content, in quotes.', schema: { type: 'string' } },
     },
   },
+  '302': {
+    description: 'With `storage: false`: the public URL of the file from `output.fileUrl`, in `Location`.',
+    headers: { Location: { description: 'Public URL of the file.', schema: { type: 'string' } } },
+  },
   '304': {
     description: 'The file did not change: `If-None-Match` matches its `ETag`. No body.',
     headers: {
@@ -113,7 +117,7 @@ const forbidden: OpenAPIV3_1.ResponseObject = { ...message, description: 'Denied
 
 export const statusOperation: OpenAPIV3_1.OperationObject = {
   description:
-    'Returns the last run, its error and the number of files and URLs, with the state of the generation job, or of the run lock with `jobs: false`. Allowed by `admin.access`, by default users of the admin user collection.',
+    'Returns the last run, its error and the number of files and URLs, with the state of the generation job, or of the run lock with `jobs: false`. With `jobs.enqueue`, `running` comes from the run lock and `queued` from the last enqueue, for up to its delay plus 15 minutes. Allowed by `admin.access`, by default users of the admin user collection.',
   responses: {
     '200': {
       content: {
@@ -256,7 +260,7 @@ export const filesOperation: OpenAPIV3_1.OperationObject = {
 
 export const generateOperation: OpenAPIV3_1.OperationObject = {
   description:
-    'With jobs, queues a generation run now, or moves a waiting run forward, and a jobs runner must pick it up. With `jobs: false`, runs the generation in the request. Allowed by `admin.access`.',
+    'With jobs, queues a generation run now, or moves a waiting run forward, and a jobs runner must pick it up. With `jobs.enqueue`, calls it with `delay: 0`. With `jobs: false`, runs the generation in the request. Allowed by `admin.access`.',
   responses: {
     '200': {
       content: {
@@ -277,8 +281,12 @@ export const generateOperation: OpenAPIV3_1.OperationObject = {
       content: {
         'application/json': {
           schema: {
-            properties: { id: { description: 'Id of the queued job.', type: ['string', 'number'] } },
-            required: ['id'],
+            properties: {
+              id: {
+                description: 'Id of the queued job. Missing when `jobs.enqueue` returns none.',
+                type: ['string', 'number'],
+              },
+            },
             type: 'object',
           },
         },
@@ -287,7 +295,7 @@ export const generateOperation: OpenAPIV3_1.OperationObject = {
     },
     '403': forbidden,
     '409': { ...message, description: 'Another run holds the lock, with `jobs: false`.' },
-    '500': { ...message, description: 'The run failed, with `jobs: false`.' },
+    '500': { ...message, description: 'The run failed with `jobs: false`, or the run could not be queued.' },
   },
   summary: 'Start a sitemap run',
   tags: TAGS,

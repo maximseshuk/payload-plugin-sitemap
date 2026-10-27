@@ -1,7 +1,7 @@
 import type { PayloadRequest } from 'payload'
 
-import { fail } from '@/server/options/fail.js'
-import type { FileMeta } from '@/server/storage/storeFile.js'
+import { fail, SitemapError } from '@/server/options/fail.js'
+import type { FileGroup, FileMeta } from '@/server/storage/storeFile.js'
 import { MAX_URLS } from '@/shared/constants.js'
 import { folderOf, isFilename } from '@/shared/filename.js'
 import type {
@@ -23,6 +23,19 @@ import { tenantsOf } from './tenants.js'
 import { sitemapIndex, toLastmod, urlEntry } from './xml.js'
 
 export type StoreFile = (filename: string, body: Buffer, meta: FileMeta) => Promise<SitemapFile>
+
+export type KeepFiles = (group: FileGroup, discard: string[]) => Promise<SitemapFile[] | undefined>
+
+class SourceError extends Error {}
+
+async function* sourceErrors<T>(entries: AsyncIterable<T>): AsyncGenerator<T> {
+  try {
+    yield* entries
+  } catch (err) {
+    if (err instanceof SitemapError) throw err
+    throw new SourceError('sitemap source failed', { cause: err })
+  }
+}
 
 const checkFolder = (file: string, index: string): void => {
   if (!file.startsWith(folderOf(index))) {
@@ -64,7 +77,9 @@ export const generateSitemap = async (
   req: PayloadRequest,
   options: ResolvedOptions,
   storeFile: StoreFile,
+  keepFiles: KeepFiles,
 ): Promise<SitemapFile[]> => {
+  const publishOnly = !options.storage.enabled
   const locales = localesOf(req)
   const codes = [...new Set([...locales.all, locales.defaultLocale])]
   const tenants = await tenantsOf(req, options)
@@ -128,10 +143,12 @@ export const generateSitemap = async (
       const siteUrl = site(group.locale)
       const locale = split ? group.locale : undefined
       const indexName = nameOf({ kind: 'index', locale, tenant })
+      const fileUrl = (filename: string) => options.output.fileUrl({ filename, locale: group.locale, siteUrl, tenant })
       const children: SitemapFile[] = []
 
       for (const source of options.sources) {
         const chunks = chunker(options.output.maxUrls, options.output.maxBytes)
+        const stored: SitemapFile[] = []
         let part = 0
         const save = async (chunk: Chunk | undefined) => {
           if (!chunk) return
@@ -145,21 +162,38 @@ export const generateSitemap = async (
             source: source.name,
             tenant: key,
             urls: chunk.urls,
+            ...(publishOnly && { url: fileUrl(filename) }),
           }
-          children.push(await store(filename, chunk.body, meta))
+          stored.push(await store(filename, chunk.body, meta))
         }
 
-        for await (const entry of groupEntries(req, options, source, group.locales, locales, site, tenant)) {
-          const built = urlEntry(entry)
-          if (!built) {
-            req.payload.logger.warn({
-              msg: `sitemap: skipped "${String(entry.url)}" from ${source.name}, not an absolute URL`,
-            })
-            continue
+        const entries = groupEntries(req, options, source, group.locales, locales, site, tenant)
+        try {
+          for await (const entry of source.onError === 'keep' ? sourceErrors(entries) : entries) {
+            const built = urlEntry(entry)
+            if (!built) {
+              req.payload.logger.warn({
+                msg: `sitemap: skipped "${String(entry.url)}" from ${source.name}, not an absolute URL`,
+              })
+              continue
+            }
+            await save(chunks.add(built.xml, built.lastmod))
           }
-          await save(chunks.add(built.xml, built.lastmod))
+          await save(chunks.end())
+          children.push(...stored)
+        } catch (err) {
+          if (!(err instanceof SourceError)) throw err
+          const discard = stored.map(({ filename }) => filename)
+          for (const name of discard) names.delete(name)
+          const previous = await keepFiles({ locale, source: source.name, tenant: key }, discard)
+          if (!previous) throw err.cause
+          req.payload.logger.warn({
+            err: err.cause,
+            msg: `sitemap: source ${source.name} failed, kept its files from the last run`,
+          })
+          for (const file of previous) checkFolder(claim(file.filename), indexName)
+          children.push(...previous)
         }
-        await save(chunks.end())
       }
 
       files.push(...children)
@@ -168,17 +202,26 @@ export const generateSitemap = async (
         fail(`${children.length} sitemap files exceed the index limit of ${MAX_URLS}, raise output.maxUrlsPerFile`)
       }
 
-      const fileUrl = (filename: string) => options.output.fileUrl({ filename, locale: group.locale, siteUrl, tenant })
       const indexUrl = options.publish ? fileUrl(indexName) : undefined
       const index = sitemapIndex(
-        children.map(({ filename, lastmod }) => {
-          const url = fileUrl(filename)
+        children.map((child) => {
+          const { filename, lastmod } = child
+          const url = publishOnly ? child.url : fileUrl(filename)
           if (indexUrl) checkUrl(url, indexUrl)
           return { lastmod, url }
         }),
       )
       const lastmod = toLastmod(children.map((child) => child.lastmod ?? '').reduce((a, b) => (a > b ? a : b)))
-      files.push(await store(indexName, index, { kind: 'index', lastmod, locale, tenant: key, urls: 0 }))
+      files.push(
+        await store(indexName, index, {
+          kind: 'index',
+          lastmod,
+          locale,
+          tenant: key,
+          urls: 0,
+          ...(publishOnly && { url: indexUrl }),
+        }),
+      )
     }
   }
 

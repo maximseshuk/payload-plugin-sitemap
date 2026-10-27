@@ -1,6 +1,7 @@
 import type { PayloadRequest, TaskSlug, Where } from 'payload'
 
 import { fail } from '@/server/options/fail.js'
+import { markQueued } from '@/server/status/queuedState.js'
 import { JOBS_SLUG, TASK_SLUG } from '@/shared/constants.js'
 import type { ResolvedOptions, SitemapStatus } from '@/shared/types/index.js'
 
@@ -41,8 +42,17 @@ export const queueRegeneration = async (
   req: PayloadRequest,
   options: ResolvedOptions,
   delay: number,
-): Promise<number | string> => {
+): Promise<number | string | undefined> => {
   if (!options.jobs) return fail('jobs is false, call generateSitemap(req)')
+  if (options.jobs.mode === 'enqueue') {
+    const due = Date.now() + delay
+    const id = await options.jobs.enqueue({ delay, req })
+    const queued = markQueued(req, due).catch((err: unknown) =>
+      req.payload.logger.error({ err, msg: 'sitemap: could not save the queued state' }),
+    )
+    if (!req.transactionID) await queued
+    return typeof id === 'number' || typeof id === 'string' ? id : undefined
+  }
   const job = await findJob(req, [waiting(), { queue: { equals: options.jobs.queue } }])
   const waitUntil = new Date(Date.now() + delay)
 

@@ -46,9 +46,9 @@ src/
     ├── options/    # resolveOptions, resolveCollection, checkKeys, checkEntry, checkSiteUrl, checkLocales, checkSlugs, checkSort, checkTenants, fail
     ├── fields/     # sitemapFields (placement through tooling insertField), sitemapFieldPaths
     ├── generate/   # generateSitemap, tenants, collectionEntries, sourceEntries, staticEntries, documentTags, documentImages, absoluteURL, fillPath, xml, chunker
-    ├── storage/    # sitemap-files collection (registry), storedFiles, storeFile (hash skip), removeFiles, readFile, serveFile, publishFiles
+    ├── storage/    # sitemap-files collection (registry), storedFiles, storeFile (hash skip, keepFiles), removeFiles, readFile, serveFile, publishFiles, runBuffer
     ├── lock/       # sitemap-locks collection, runLock (acquire, refresh, release)
-    ├── status/     # sitemap-status global, statusStore, sitemapStatus, sitemapFiles (paged list)
+    ├── status/     # sitemap-status global, statusStore, sitemapStatus, queuedState, sitemapFiles (paged list)
     ├── jobs/       # sitemapTask, runGeneration, queue (debounce), regenerateHooks
     ├── endpoints/  # fileEndpoints (public), adminEndpoints (status, files, generate), param, openapi (custom.openapi per route)
     ├── telemetry.ts # buildFeatures, reportSitemapTelemetry
@@ -109,6 +109,24 @@ registry -> status.run -> publish -> endpoints`
   15 min), so busy job wait for lock.
 - **`jobs: false`.** No task, hooks, schedule (no `payload-jobs` unless user has tasks). `POST /sitemap/generate` run
   in request: 200 `{ files, urls }`, 409 lock busy, 500 `{ message }`. `queueSitemap` throw. Status state from lock.
+- **`jobs.enqueue`.** Resolved `jobs` is `false | { mode: 'payload', queue, schedule?, regenerate } | { mode: 'enqueue',
+  enqueue, regenerate }`. No task, no schedule. Hooks, generate endpoint and `queueSitemap` call it with `{ delay, req }`;
+  host worker calls `generateSitemap(req)`. Endpoint: 202 `{ id }` or `{}`, throw logged, 500. Queued state: row
+  `key: 'queued'` in `sitemap-locks`, `expiresAt` = due + 15 min, never the status global (its full-row update would
+  race the run switch). `markQueued`: own req, `disableTransaction`, conditional update (only an earlier or expired
+  mark moves), else create (unique clash ignored); awaited only when caller req has no `transactionID`, else
+  detached; errors logged. Run deletes the row after the lock. State: lock `running`; live row `queued`; else `idle`.
+- **`endpoints`.** `files: false` drops `/sitemap.xml` and `/sitemaps/*`. `generate: false` drops
+  `POST /sitemap/generate` and the panel hides **Regenerate** (`generate` prop from view and widget).
+- **`storage: false`.** Needs `publish`. Files collection no upload, `filename`/`url` (from `output.fileUrl`) fields.
+  Bodies whose public copy differs (`published != hash`) buffered in an `mkdtemp` folder (`runBuffer`), removed in
+  `finally`; new doc gets `published` when the public copy already matches. Missing buffered body: fail. Kept doc url
+  updated when `fileUrl` changed. Nothing put before the switch, so a failed run put nothing. File endpoints 302 to
+  `url`; `sitemapProxy` uses `redirect: 'manual'`, passes 3xx, 502 on a redirect to its own path.
+- **`onError`.** Per source, `'fail'` default. `'keep'`: errors from the source's entries (wrapped as `SourceError`,
+  never `SitemapError` from `fail()`) delete the attempt's docs and reuse live docs of the same source, locale and
+  tenant (`keepFiles`), warn. No live docs, or with `storage: false` an unpublished kept doc: throw the source error
+  (never a partial sitemap). Storage, lock and publish errors still fail.
 - **Lock.** Every run (job, endpoint, direct `generateSitemap`) take `sitemap-locks` doc `key: 'run'` (unique), random
   `owner`, `expiresAt` now + 5 min. Own lock matched by `id` and `owner` (ids may be reused). Live lock: throw
   `a sitemap run is already in progress`. Expired lock removed. After insert, any other live lock: delete own, throw busy
@@ -170,8 +188,8 @@ registry -> status.run -> publish -> endpoints`
 - `tests/unit/` mirror `src/`, one spec per module (`src/server/generate/xml.ts` ->
   `tests/unit/server/generate/xml.spec.ts`, `src/index.ts` -> `tests/unit/index.spec.ts`). No DB. Fixtures shared by
   specs in `tests/helpers/unit/`. `server/telemetry.spec.ts` mocks tooling.
-- `tests/integration/<feature>.int.spec.ts`: `generation`, `publish`, `jobs`, `lock`, `endpoints`, `admin`, `retry`,
-  `s3`, `tenants`, `stress`. Real Payload on SQLite (default), `TEST_DB=postgres` (PGlite), `TEST_DB=mongodb`
+- `tests/integration/<feature>.int.spec.ts`: `generation`, `publish`, `publishOnly`, `jobs`, `lock`, `endpoints`,
+  `admin`, `retry`, `s3`, `tenants`, `stress`. Real Payload on SQLite (default), `TEST_DB=postgres` (PGlite), `TEST_DB=mongodb`
   (memory server). Helpers in `tests/helpers/int/`: `boot`, `files`, `fakeS3`, `sitemap` (shared options, `start`,
   `seed`, request helpers; each file `afterEach(cleanup)`).
 - `stress.int.spec.ts` SQLite only, CI size; `pnpm test:stress` (`STRESS=full`) big size.

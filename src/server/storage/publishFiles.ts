@@ -1,10 +1,9 @@
 import type { PayloadRequest } from 'payload'
 
-import { fail } from '@/server/options/fail.js'
 import { XML_TYPE } from '@/shared/constants.js'
 import type { ResolvedOptions } from '@/shared/types/index.js'
 
-import { readFile } from './readFile.js'
+import { readBody } from './readFile.js'
 import type { Store } from './storeFile.js'
 
 export const publishFiles = async (
@@ -18,9 +17,7 @@ export const publishFiles = async (
   for (const kind of ['file', 'index'] as const) {
     for (const file of current.filter((item) => item.kind === kind && item.published !== item.hash)) {
       await tick()
-      const response = await readFile(req, options, file)
-      if (!response?.ok) fail(`could not read ${file.name} to publish it`)
-      const body = Buffer.from(await response!.arrayBuffer())
+      const body = await readBody(req, options, store, file)
       await put({ body, contentType: XML_TYPE, filename: file.name, req })
       await req.payload.update({
         collection: options.storage.collection,

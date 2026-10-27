@@ -33,7 +33,12 @@ export const SitemapView = async ({
       visibleEntities={visibleEntities}
     >
       <SetStepNav nav={[{ label: title }]} />
-      <SitemapPanel initial={await sitemapStatus(req, options)} initialFiles={await sitemapFiles(req, options, {})} />
+      <SitemapPanel
+        files={options.endpoints.files}
+        generate={options.endpoints.generate}
+        initial={await sitemapStatus(req, options)}
+        initialFiles={await sitemapFiles(req, options, {})}
+      />
     </DefaultTemplate>
   )
 }

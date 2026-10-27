@@ -16,6 +16,7 @@ export type SitemapProxyOptions = {
 
 const PASS = ['cache-control', 'content-type', 'etag', 'last-modified']
 const PREFIX = '/sitemaps/'
+const REDIRECT = new Set([301, 302, 303, 307, 308])
 
 const target = (pathname: string): string | undefined => {
   if (pathname === '/sitemap.xml') return pathname
@@ -40,10 +41,19 @@ export const sitemapProxy = ({ apiRoute = '/api', locale, serverUrl, tenant }: S
     if (id) url.searchParams.set('tenant', id)
 
     const match = request.headers.get('if-none-match')
-    const upstream = await fetch(url, { headers: match ? { 'If-None-Match': match } : {}, redirect: 'follow' }).catch(
+    const upstream = await fetch(url, { headers: match ? { 'If-None-Match': match } : {}, redirect: 'manual' }).catch(
       () => undefined,
     )
     if (!upstream) return new Response('Bad gateway', { status: 502 })
+    const location = upstream.headers.get('location')
+    if (REDIRECT.has(upstream.status) && location) {
+      const next = new URL(location, url)
+      const self = new URL(request.url)
+      if (next.origin === self.origin && next.pathname === self.pathname) {
+        return new Response('Bad gateway', { status: 502 })
+      }
+      return new Response(null, { headers: { Location: next.href }, status: upstream.status })
+    }
     if (upstream.status !== 304 && !upstream.ok) {
       return new Response('Not found', { status: upstream.status === 404 ? 404 : 502 })
     }

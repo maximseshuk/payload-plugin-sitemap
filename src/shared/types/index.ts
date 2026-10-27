@@ -9,6 +9,8 @@ export type {
   SitemapDelete,
   SitemapDoc,
   SitemapDocArgs,
+  SitemapEndpointsOptions,
+  SitemapEnqueue,
   SitemapFieldsOptions,
   SitemapFilenameArgs,
   SitemapImageData,
@@ -21,6 +23,7 @@ export type {
   SitemapRegenerateOptions,
   SitemapSortField,
   SitemapSource,
+  SitemapSourceOnError,
   SitemapStaticEntries,
   SitemapStaticEntry,
   SitemapStaticSource,
@@ -29,7 +32,7 @@ export type {
   SitemapTenantsOptions,
   SitemapUpload,
 } from './options.js'
-export type { ResolvedCollection, ResolvedOptions, ResolvedSource } from './resolved.js'
+export type { ResolvedCollection, ResolvedOptions, ResolvedRegenerate, ResolvedSource } from './resolved.js'
 export type {
   Changefreq,
   SitemapEntry,

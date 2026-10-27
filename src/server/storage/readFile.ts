@@ -6,7 +6,9 @@ import type { PayloadRequest } from 'payload'
 import { fail } from '@/server/options/fail.js'
 import type { ResolvedOptions } from '@/shared/types/index.js'
 
+import { bufferedBody } from './runBuffer.js'
 import type { StoredFile } from './storedFiles.js'
+import type { Store } from './storeFile.js'
 
 const HTTP = /^https?:\/\//
 const CONDITIONAL = /^(?:etag|range|if-.+)$/
@@ -78,4 +80,18 @@ export const readFile = async (
   } catch {
     return undefined
   }
+}
+
+export const readBody = async (
+  req: PayloadRequest,
+  options: ResolvedOptions,
+  store: Store,
+  file: StoredFile,
+): Promise<Buffer> => {
+  if (store.buffer) {
+    return (await bufferedBody(store.buffer, file.name)) ?? fail(`${file.name} is missing from the run buffer`)
+  }
+  const response = await readFile(req, options, file)
+  if (!response?.ok) fail(`could not read ${file.name} to publish it`)
+  return Buffer.from(await response!.arrayBuffer())
 }

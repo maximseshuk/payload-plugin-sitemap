@@ -2,16 +2,19 @@ import { DEFAULT_FILES_SLUG, MAX_BYTES, MAX_URLS, STATIC_SOURCE } from '@/shared
 import type {
   CollectionOverride,
   ResolvedOptions,
+  ResolvedRegenerate,
   ResolvedSource,
   SitemapAdminOptions,
   SitemapCollectionSource,
   SitemapCustomSource,
+  SitemapEndpointsOptions,
   SitemapFilenameArgs,
   SitemapJobsOptions,
   SitemapOutputOptions,
   SitemapPluginOptions,
   SitemapPublishOptions,
   SitemapRegenerateOptions,
+  SitemapSourceOnError,
   SitemapStaticSource,
   SitemapStorageOptions,
   SitemapTenantsOptions,
@@ -29,6 +32,7 @@ const PLUGIN_KEYS = [
   'output',
   'storage',
   'publish',
+  'endpoints',
   'jobs',
   'tenants',
   'admin',
@@ -36,12 +40,14 @@ const PLUGIN_KEYS = [
   'telemetry',
 ] as const
 const SOURCE_TYPES = ['collection', 'custom', 'static'] as const
-const CUSTOM_KEYS = ['type', 'name', 'locales', 'entries'] as const
-const STATIC_KEYS = ['type', 'name', 'entries'] as const
+const CUSTOM_KEYS = ['type', 'name', 'locales', 'entries', 'onError'] as const
+const STATIC_KEYS = ['type', 'name', 'entries', 'onError'] as const
+const ON_ERROR = ['fail', 'keep'] as const
 const OUTPUT_KEYS = ['maxUrlsPerFile', 'filename', 'fileUrl', 'hreflang', 'splitLocales'] as const
 const STORAGE_KEYS = ['collection', 'upload', 'delete'] as const
 const PUBLISH_KEYS = ['put', 'delete'] as const
-const JOBS_KEYS = ['regenerate', 'schedule', 'queue'] as const
+const ENDPOINTS_KEYS = ['files', 'generate'] as const
+const JOBS_KEYS = ['regenerate', 'schedule', 'queue', 'enqueue'] as const
 const REGENERATE_KEYS = ['delay', 'collections', 'globals'] as const
 const ADMIN_KEYS = ['access', 'view', 'widget'] as const
 const TENANTS_KEYS = ['collection', 'field', 'where'] as const
@@ -64,8 +70,13 @@ const checkBoolean = (value: unknown, where: string): void => {
   if (value !== undefined && typeof value !== 'boolean') fail(`${where} must be true or false`)
 }
 
+const resolveOnError = (value: unknown, where: string): SitemapSourceOnError => {
+  if (value !== undefined && !ON_ERROR.includes(value as never)) fail(`${where}.onError must be "fail" or "keep"`)
+  return (value as SitemapSourceOnError | undefined) ?? 'fail'
+}
+
 const resolveSource = (value: unknown, where: string): ResolvedSource => {
-  const { type } = checkObject(value, where)
+  const { onError, type } = checkObject(value, where)
   if (!SOURCE_TYPES.includes(type as never)) fail(`${where}.type must be "collection", "custom" or "static"`)
   if (type === 'collection') {
     const source = value as SitemapCollectionSource
@@ -78,6 +89,7 @@ const resolveSource = (value: unknown, where: string): ResolvedSource => {
       kind: 'collection',
       locales: collection.locales,
       name: checkName(source.name ?? source.collection, where),
+      onError: resolveOnError(onError, where),
       slug: source.collection,
     }
   }
@@ -85,13 +97,24 @@ const resolveSource = (value: unknown, where: string): ResolvedSource => {
     const source = checkKeys(value, CUSTOM_KEYS, where) as SitemapCustomSource
     if (typeof source.entries !== 'function') fail(`${where}.entries must be a function`)
     if (source.locales !== undefined && !Array.isArray(source.locales)) fail(`${where}.locales must be an array`)
-    return { entries: source.entries, kind: 'custom', locales: source.locales, name: checkName(source.name, where) }
+    return {
+      entries: source.entries,
+      kind: 'custom',
+      locales: source.locales,
+      name: checkName(source.name, where),
+      onError: resolveOnError(onError, where),
+    }
   }
   const source = checkKeys(value, STATIC_KEYS, where) as SitemapStaticSource
   const { entries } = source
   if (Array.isArray(entries)) entries.forEach((entry, index) => checkEntry(entry, `${where}.entries[${index}]`))
   else if (typeof entries !== 'function') fail(`${where}.entries must be an array or a function`)
-  return { entries, kind: 'static', name: checkName(source.name ?? STATIC_SOURCE, where) }
+  return {
+    entries,
+    kind: 'static',
+    name: checkName(source.name ?? STATIC_SOURCE, where),
+    onError: resolveOnError(onError, where),
+  }
 }
 
 const resolveSources = (value: unknown): ResolvedSource[] => {
@@ -138,7 +161,11 @@ const resolveOutput = (value: unknown): ResolvedOptions['output'] => {
   }
 }
 
-const resolveStorage = (value: unknown): ResolvedOptions['storage'] => {
+const resolveStorage = (value: unknown, publish: unknown): ResolvedOptions['storage'] => {
+  if (value === false) {
+    if (publish === undefined) fail('storage: false needs publish, the only place the files go')
+    return { collection: DEFAULT_FILES_SLUG, enabled: false, overrides: {} }
+  }
   const storage = checkKeys(value ?? {}, STORAGE_KEYS, 'storage') as SitemapStorageOptions
   const overrides = (
     storage.collection === undefined ? {} : checkObject(storage.collection, 'storage.collection')
@@ -147,12 +174,14 @@ const resolveStorage = (value: unknown): ResolvedOptions['storage'] => {
   checkFunction(overrides.fields, 'storage.collection.fields')
   checkFunction(storage.upload, 'storage.upload')
   checkFunction(storage.delete, 'storage.delete')
-  if (overrides.upload !== undefined && storage.upload)
+  if (overrides.upload !== undefined && storage.upload) {
     fail('storage.collection.upload cannot be set with storage.upload')
+  }
   if (storage.delete && !storage.upload) fail('storage.delete needs storage.upload')
   return {
     collection: overrides.slug ?? DEFAULT_FILES_SLUG,
     delete: storage.delete,
+    enabled: true,
     overrides,
     upload: storage.upload,
   }
@@ -169,26 +198,42 @@ const resolvePublish = (value: unknown, output: unknown): ResolvedOptions['publi
   return { delete: publish.delete, put: publish.put }
 }
 
+const resolveRegenerate = (value: unknown): ResolvedRegenerate => {
+  if (value === false) return false
+  const regenerate = checkKeys(value ?? {}, REGENERATE_KEYS, 'jobs.regenerate') as SitemapRegenerateOptions
+  const delay = regenerate.delay ?? 300_000
+  if (!Number.isFinite(delay) || delay < 0) fail('jobs.regenerate.delay must be a number of milliseconds')
+  for (const key of ['collections', 'globals'] as const) {
+    if (regenerate[key] !== undefined && !Array.isArray(regenerate[key])) {
+      fail(`jobs.regenerate.${key} must be an array`)
+    }
+  }
+  return { collections: regenerate.collections ?? [], delay, globals: regenerate.globals ?? [] }
+}
+
 const resolveJobs = (value: unknown): ResolvedOptions['jobs'] => {
   if (value === false) return false
   const jobs = checkKeys(value ?? {}, JOBS_KEYS, 'jobs') as SitemapJobsOptions
   if (jobs.schedule !== undefined && typeof jobs.schedule !== 'string') fail('jobs.schedule must be a cron string')
   if (jobs.queue !== undefined && typeof jobs.queue !== 'string') fail('jobs.queue must be a string')
-  const queue = jobs.queue ?? 'default'
-  if (jobs.regenerate === false) return { queue, regenerate: false, schedule: jobs.schedule }
+  checkFunction(jobs.enqueue, 'jobs.enqueue')
+  if (jobs.enqueue && jobs.schedule !== undefined) {
+    fail('jobs.schedule needs the Payload jobs queue, schedule runs in your own scheduler with jobs.enqueue')
+  }
+  if (jobs.enqueue && jobs.queue !== undefined) {
+    fail('jobs.queue names a Payload jobs queue, not used with jobs.enqueue')
+  }
+  const regenerate = resolveRegenerate(jobs.regenerate)
+  return jobs.enqueue
+    ? { enqueue: jobs.enqueue, mode: 'enqueue', regenerate }
+    : { mode: 'payload', queue: jobs.queue ?? 'default', regenerate, schedule: jobs.schedule }
+}
 
-  const regenerate = checkKeys(jobs.regenerate ?? {}, REGENERATE_KEYS, 'jobs.regenerate') as SitemapRegenerateOptions
-  const delay = regenerate.delay ?? 300_000
-  if (!Number.isFinite(delay) || delay < 0) fail('jobs.regenerate.delay must be a number of milliseconds')
-  for (const key of ['collections', 'globals'] as const) {
-    if (regenerate[key] !== undefined && !Array.isArray(regenerate[key]))
-      fail(`jobs.regenerate.${key} must be an array`)
-  }
-  return {
-    queue,
-    regenerate: { collections: regenerate.collections ?? [], delay, globals: regenerate.globals ?? [] },
-    schedule: jobs.schedule,
-  }
+const resolveEndpoints = (value: unknown): ResolvedOptions['endpoints'] => {
+  const endpoints = checkKeys(value ?? {}, ENDPOINTS_KEYS, 'endpoints') as SitemapEndpointsOptions
+  checkBoolean(endpoints.files, 'endpoints.files')
+  checkBoolean(endpoints.generate, 'endpoints.generate')
+  return { files: endpoints.files ?? true, generate: endpoints.generate ?? true }
 }
 
 const resolveAdmin = (value: unknown): ResolvedOptions['admin'] => {
@@ -234,6 +279,7 @@ export const resolveOptions = (value: SitemapPluginOptions): ResolvedOptions => 
 
   return {
     admin: resolveAdmin(options.admin),
+    endpoints: resolveEndpoints(options.endpoints),
     jobs: resolveJobs(options.jobs),
     output: resolveOutput(options.output),
     publish: resolvePublish(options.publish, options.output),
@@ -244,7 +290,7 @@ export const resolveOptions = (value: SitemapPluginOptions): ResolvedOptions => 
         tenant?.id,
       ),
     sources: resolveSources(options.sources),
-    storage: resolveStorage(options.storage),
+    storage: resolveStorage(options.storage, options.publish),
     tenants: resolveTenants(options.tenants),
   }
 }

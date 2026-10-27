@@ -13,6 +13,8 @@ import { SitemapStats } from './SitemapStats.js'
 import { useFormat } from './useFormat.js'
 
 type Props = {
+  files?: boolean
+  generate?: boolean
   href?: string
   initial?: SitemapStatus
   initialFiles?: SitemapFilesPage
@@ -21,7 +23,14 @@ type Props = {
 
 const POLL = 3000
 
-export const SitemapPanel: React.FC<Props> = ({ href, initial, initialFiles, widget = false }) => {
+export const SitemapPanel: React.FC<Props> = ({
+  files = true,
+  generate = true,
+  href,
+  initial,
+  initialFiles,
+  widget = false,
+}) => {
   const {
     config: {
       routes: { api },
@@ -122,20 +131,22 @@ export const SitemapPanel: React.FC<Props> = ({ href, initial, initialFiles, wid
               {translate('open')}
             </Button>
           )}
-          <Button
-            buttonStyle={widget ? 'secondary' : 'primary'}
-            disabled={pending}
-            margin={false}
-            onClick={() => void regenerate()}
-            size="medium"
-          >
-            {translate(label)}
-          </Button>
+          {generate && (
+            <Button
+              buttonStyle={widget ? 'secondary' : 'primary'}
+              disabled={pending}
+              margin={false}
+              onClick={() => void regenerate()}
+              size="medium"
+            >
+              {translate(label)}
+            </Button>
+          )}
         </div>
       </header>
       {widget ? body : notice && <div className="sitemap-panel__body">{body}</div>}
       {status && <SitemapStats status={status} widget={widget} />}
-      {!widget && <SitemapFiles base={base} initial={initialFiles} status={status} />}
+      {!widget && <SitemapFiles base={base} files={files} initial={initialFiles} status={status} />}
     </section>
   )
 }

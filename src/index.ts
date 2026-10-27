@@ -38,7 +38,7 @@ export const sitemap: (options: SitemapPluginOptions) => Plugin = definePlugin<S
       i18n: { ...config.i18n, translations: mergeTranslations(config.i18n?.translations) },
     }
     const tasks = (enabled: boolean) =>
-      options.jobs
+      options.jobs && options.jobs.mode === 'payload'
         ? { jobs: { ...config.jobs, tasks: [...(config.jobs?.tasks ?? []), sitemapTask(options, enabled)] } }
         : {}
     if (pluginOptions.enabled === false) return { ...config, ...schema, ...tasks(false) }
@@ -52,7 +52,11 @@ export const sitemap: (options: SitemapPluginOptions) => Plugin = definePlugin<S
       ...addRegenerateHooks(schema.collections, schema.globals, options, watched),
       admin: adminConfig(config.admin, options),
       custom: { ...config.custom, [PLUGIN_NAME]: options },
-      endpoints: [...(config.endpoints ?? []), ...fileEndpoints(options), ...adminEndpoints(options)],
+      endpoints: [
+        ...(config.endpoints ?? []),
+        ...(options.endpoints.files ? fileEndpoints(options) : []),
+        ...adminEndpoints(options),
+      ],
       ...tasks(true),
       onInit: async (payload) => {
         checkSlugs(payload, watched)
@@ -68,8 +72,10 @@ export const sitemap: (options: SitemapPluginOptions) => Plugin = definePlugin<S
 const optionsOf = (req: PayloadRequest): ResolvedOptions =>
   (req.payload.config.custom?.[PLUGIN_NAME] as ResolvedOptions | undefined) ?? fail('the plugin is not enabled')
 
-export const queueSitemap = (req: PayloadRequest, delay = 0): Promise<number | string> =>
-  queueRegeneration(req, optionsOf(req), delay)
+export const queueSitemap = <Id extends number | string | undefined = number | string>(
+  req: PayloadRequest,
+  delay = 0,
+): Promise<Id> => queueRegeneration(req, optionsOf(req), delay) as Promise<Id>
 
 export const generateSitemap = async (req: PayloadRequest): Promise<SitemapFile[]> => runGeneration(req, optionsOf(req))
 
@@ -88,6 +94,8 @@ export type {
   SitemapDelete,
   SitemapDoc,
   SitemapDocArgs,
+  SitemapEndpointsOptions,
+  SitemapEnqueue,
   SitemapFieldsOptions,
   SitemapFilenameArgs,
   SitemapEntry,
@@ -105,6 +113,7 @@ export type {
   SitemapRegenerateOptions,
   SitemapSortField,
   SitemapSource,
+  SitemapSourceOnError,
   SitemapStaticEntries,
   SitemapStaticEntry,
   SitemapStaticSource,

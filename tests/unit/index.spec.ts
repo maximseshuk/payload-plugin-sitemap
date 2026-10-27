@@ -96,6 +96,67 @@ describe('sitemap plugin', () => {
     expect(config.endpoints?.map(({ path }) => path)).toContain('/sitemap/generate')
   })
 
+  describe('enqueue', () => {
+    const posts = { slug: 'posts', fields: [{ name: 'slug', type: 'text' }] }
+    const withEnqueue = (jobs: Record<string, unknown> = {}, options = {}) => {
+      const config = apply(
+        {
+          jobs: { enqueue: () => 'job', regenerate: { delay: 5 }, ...jobs },
+          siteUrl: 'https://example.com',
+          sources: [{ type: 'collection', collection: 'posts' }],
+          ...options,
+        },
+        { ...base, collections: [posts] } as Config,
+      )
+      const hook = config.collections?.find(({ slug }) => slug === 'posts')?.hooks?.afterChange?.[0]
+      const generate = config.endpoints?.find(({ path }) => path === '/sitemap/generate')
+      return { config, generate, hook }
+    }
+
+    it('adds no task but keeps the hooks and the generate endpoint', () => {
+      const { config, generate, hook } = withEnqueue()
+      expect(config.jobs).toBeUndefined()
+      expect(hook).toBeDefined()
+      expect(generate).toBeDefined()
+    })
+
+    it('adds no hooks with regenerate false', () => {
+      const { generate, hook } = withEnqueue({ regenerate: false })
+      expect(hook).toBeUndefined()
+      expect(generate).toBeDefined()
+    })
+
+    it('adds no task, hooks or endpoints when not enabled', () => {
+      const { config, generate, hook } = withEnqueue({}, { enabled: false })
+      expect(config.jobs).toBeUndefined()
+      expect(hook).toBeUndefined()
+      expect(generate).toBeUndefined()
+    })
+  })
+
+  it('leaves the file or generate endpoints out when turned off', () => {
+    const paths = (endpoints: { files?: boolean; generate?: boolean }) =>
+      apply({ endpoints, siteUrl: 'https://example.com' }).endpoints?.map(({ path }) => path)
+    expect(paths({ generate: false })).toEqual([
+      '/sitemap.xml',
+      '/sitemaps/:filename+',
+      '/sitemap/status',
+      '/sitemap/files',
+    ])
+    expect(paths({ files: false })).toEqual(['/sitemap/status', '/sitemap/files', '/sitemap/generate'])
+  })
+
+  it('keeps only the file list in the files collection with storage false', () => {
+    const files = apply({
+      output: { fileUrl: ({ filename }) => `https://cdn.example.com/${filename}` },
+      publish: { put: async () => {} },
+      siteUrl: 'https://example.com',
+      storage: false,
+    }).collections?.find(({ slug }) => slug === 'sitemap-files')
+    expect(files?.upload).toBe(false)
+    expect(files?.fields.map((field) => ('name' in field ? field.name : '')).slice(-2)).toEqual(['filename', 'url'])
+  })
+
   it('adds the sitemap fields and the regenerate hooks to a source collection', () => {
     const posts = { slug: 'posts', fields: [{ name: 'slug', type: 'text' }] }
     const config = apply(
