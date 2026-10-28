@@ -137,7 +137,7 @@
     "@vitejs/plugin-rsc": "^0.5.36",
     "cross-env": "^10.1.0",
     "mongodb-memory-server": "^11.3.0",
-    "next": "16.4.2",
+    "next": "16.4.3",
     "oxfmt": "^0.74.0",
     "oxlint": "^1.88.0",
     "payload": "4.0.0-beta.4",
